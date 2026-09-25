@@ -1,0 +1,151 @@
+:root {
+	--login-ink: #321e22;
+	--login-red: #691c32;
+	--login-gold: #c5a059;
+}
+
+.auth-page {
+	min-height: 100vh;
+	display: grid;
+	place-items: center;
+	padding: 32px 18px;
+	color: var(--login-ink);
+	background: linear-gradient(135deg, rgba(46, 20, 27, .78), rgba(105, 28, 50, .42)),
+		url("../public/utp-1.jpg") center / cover fixed;
+}
+
+.login-container {
+	width: min(100%, 430px);
+	animation: login-enter .45s ease-out both;
+}
+
+.login-brand {
+	color: #fff;
+	text-align: center;
+	margin-bottom: 22px;
+}
+
+.login-brand img {
+	display: block;
+	width: min(210px, 60%);
+	max-height: 86px;
+	object-fit: contain;
+	margin: 0 auto 12px;
+}
+
+.login-brand p {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.card-login {
+	display: grid;
+	gap: 18px;
+	padding: 34px;
+	border: 1px solid rgba(255, 255, 255, .56);
+	border-radius: 8px;
+	background: rgba(255, 255, 255, .94);
+	box-shadow: 0 20px 55px rgba(31, 10, 16, .28);
+}
+
+.auth-form { display: grid; gap: 18px; }
+
+.card-login h1 {
+	color: var(--login-red);
+	font-size: 28px;
+	text-align: center;
+}
+
+.form-intro {
+	margin-top: -12px;
+	color: #655b5c;
+	font-size: 14px;
+	text-align: center;
+}
+
+.input-group {
+	display: grid;
+	gap: 7px;
+}
+
+.input-group label {
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.input-group input {
+	width: 100%;
+	min-height: 44px;
+	padding: 10px 12px;
+	border: 1px solid #cfc7c8;
+	border-radius: 4px;
+	background: #fff;
+	color: var(--login-ink);
+}
+
+.input-group input:focus {
+	outline: 3px solid rgba(197, 160, 89, .3);
+	border-color: var(--login-red);
+}
+
+.password-control {
+	position: relative;
+}
+
+.password-control input {
+	padding-right: 82px;
+}
+
+.toggle-password {
+	position: absolute;
+	top: 50%;
+	right: 10px;
+	transform: translateY(-50%);
+	padding: 6px 8px;
+	border: 0;
+	background: transparent;
+	color: var(--login-red);
+	font-size: 12px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.btn-login {
+	min-height: 46px;
+	border: 0;
+	border-radius: 4px;
+	background: var(--login-red);
+	color: #fff;
+	font-size: 15px;
+	font-weight: 700;
+	cursor: pointer;
+	transition: background-color .18s ease, transform .18s ease;
+}
+
+.btn-login:hover { background: #4e1426; }
+.btn-login:active { transform: translateY(1px); }
+.btn-login:disabled { opacity: .65; cursor: wait; }
+
+.form-message {
+	margin: -8px 0;
+	color: #a41c31;
+	font-size: 14px;
+	text-align: center;
+}
+
+.register-link {
+	color: var(--login-red);
+	font-size: 14px;
+	font-weight: 700;
+	text-align: center;
+}
+
+@keyframes login-enter {
+	from { opacity: 0; transform: translateY(10px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+	.auth-page { padding: 24px 14px; background-attachment: scroll; }
+	.card-login { padding: 26px 22px; }
+}

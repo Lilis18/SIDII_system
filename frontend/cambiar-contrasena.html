@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SIDII - Cambiar contraseña</title>
+	<link rel="stylesheet" href="css/global.css">
+	<link rel="stylesheet" href="css/login.css">
+</head>
+<body class="auth-page">
+	<main class="login-container">
+		<header class="login-brand">
+			<p>Sistema Integral de Información Institucional</p>
+		</header>
+		<section class="card-login">
+			<h1>Cambiar contraseña</h1>
+			<form id="changePasswordForm" class="auth-form" method="post">
+				<div class="input-group">
+					<label for="currentPassword">Contraseña actual</label>
+					<div class="password-control">
+						<input id="currentPassword" name="currentPassword" type="password" autocomplete="current-password" required>
+						<button type="button" class="toggle-password" data-toggle-password="currentPassword" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+					</div>
+				</div>
+				<div class="input-group">
+					<label for="newPassword">Nueva contraseña</label>
+					<div class="password-control">
+						<input id="newPassword" name="newPassword" type="password" autocomplete="new-password" required>
+						<button type="button" class="toggle-password" data-toggle-password="newPassword" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+					</div>
+				</div>
+				<div class="input-group">
+					<label for="confirmPassword">Confirmar contraseña</label>
+					<div class="password-control">
+						<input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required>
+						<button type="button" class="toggle-password" data-toggle-password="confirmPassword" aria-label="Mostrar contraseña" aria-pressed="false">Mostrar</button>
+					</div>
+				</div>
+				<p class="form-message" id="changePasswordMessage" role="alert" hidden></p>
+				<button class="btn-login" type="submit">Actualizar contraseña</button>
+				<a class="register-link" href="dashboard.html">Regresar al panel</a>
+			</form>
+		</section>
+	</main>
+	<script src="js/auth.js"></script>
+	<script src="js/footer.js"></script>
+</body>
+</html>

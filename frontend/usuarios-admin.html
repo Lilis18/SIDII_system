@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SIDII - Gestión de usuarios</title>
+	<link rel="stylesheet" href="css/global.css">
+	<link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body class="app-page" data-page="admin-users">
+	<header class="app-header">
+		<a class="brand-link" href="dashboard.html">SIDII <span>Gestión institucional</span></a>
+		<div class="header-actions">
+			<span id="headerUser"></span>
+			<button class="button button-quiet" data-logout type="button">Cerrar sesión</button>
+		</div>
+	</header>
+	<main class="page-content admin-users-page">
+		<div class="page-heading">
+			<div><p class="eyebrow">Administración</p><h1>Gestión de usuarios</h1></div>
+			<a class="button button-secondary" href="dashboard.html">Volver al panel</a>
+		</div>
+		<p id="usersMessage" class="inline-message" role="status" hidden></p>
+		<div class="table-scroll">
+			<table class="data-table">
+				<thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Acciones</th></tr></thead>
+				<tbody id="usersTable"><tr><td colspan="4">Cargando usuarios...</td></tr></tbody>
+			</table>
+		</div>
+	</main>
+	<script src="js/auth.js"></script>
+	<script src="js/footer.js"></script>
+</body>
+</html>

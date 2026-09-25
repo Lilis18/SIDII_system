@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>SIDII - Panel</title>
+	<link rel="stylesheet" href="css/global.css">
+	<link rel="stylesheet" href="css/dashboard.css">
+	<link rel="stylesheet" href="css/evidenvias.css">
+	<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
+</head>
+<body class="app-page" data-page="dashboard">
+	<header class="app-header">
+		<a class="brand-link" href="dashboard.html">SIDII <span>Gestión institucional</span></a>
+		<div class="header-actions">
+			<span id="headerUser"></span>
+			<a class="button button-quiet" href="cambiar-contrasena.html">Cambiar contraseña</a>
+			<button class="button button-quiet" data-logout type="button">Cerrar sesión</button>
+		</div>
+	</header>
+	<main class="dashboard-shell">
+		<button class="mobile-menu-toggle" id="menuToggle" type="button" aria-expanded="false" aria-controls="dashboardNav">Menú</button>
+		<nav class="dashboard-nav" id="dashboardNav" aria-label="Secciones del panel">
+			<button type="button" class="nav-tab is-active" data-tab="perfil">Perfil</button>
+			<button type="button" class="nav-tab" data-tab="cargar">Cargar datos</button>
+			<button type="button" class="nav-tab" data-tab="evidencias">Cargar evidencias</button>
+			<button type="button" class="nav-tab" data-tab="graficos">Visualizador de gráficas</button>
+			<button type="button" class="nav-tab" data-tab="edicion">Gestión de datos</button>
+		</nav>
+		<section class="dashboard-content">
+			<div class="dashboard-view is-active" id="view-perfil" data-view="perfil"></div>
+			<div class="dashboard-view" id="view-cargar" data-view="cargar"></div>
+			<div class="dashboard-view" id="view-evidencias" data-view="evidencias"></div>
+			<div class="dashboard-view" id="view-graficos" data-view="graficos"></div>
+			<div class="dashboard-view" id="view-edicion" data-view="edicion"></div>
+		</section>
+	</main>
+	<script src="js/auth.js"></script>
+	<script src="js/cargaDeDatos.js"></script>
+	<script src="js/evidencias.js"></script>
+	<script src="js/grafico.js"></script>
+	<script src="js/dasboard.js"></script>
+	<script src="js/footer.js"></script>
+</body>
+</html>
