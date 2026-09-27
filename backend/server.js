@@ -13,15 +13,26 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:8081,http://127.0.0.1:8081')
+const normalizeOrigin = (value) => {
+  try {
+    return new URL(value.trim().replace(/^(["'])(.*)\1$/, '$2')).origin;
+  } catch {
+    return null;
+  }
+};
+const configuredOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+const allowedOrigins = new Set([
+  'https://sistema-integral-de-indicadores-zxuf.onrender.com',
+  ...configuredOrigins,
+].map(normalizeOrigin).filter(Boolean));
 
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Origen no permitido por CORS.'));
+    if (!origin || allowedOrigins.has(normalizeOrigin(origin))) return callback(null, true);
+    return callback(new Error(`Origen no permitido por CORS: ${origin}`));
   },
 }));
 app.use(express.json({ limit: "50mb" }));
