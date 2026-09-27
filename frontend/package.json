@@ -1,0 +1,8 @@
+{
+  "name": "sidii-frontend-static",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/generate-api-config.js"
+  }
+}

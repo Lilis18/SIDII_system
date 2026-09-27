@@ -7,7 +7,7 @@ const User = require('../models/User');
 const AppSettings = require("../models/AppSettings");
 const { protect } = require('../middleware/authMiddleware');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'secreto123';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Registro
 router.post('/register', async (req, res) => {

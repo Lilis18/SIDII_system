@@ -1,5 +1,5 @@
 (() => {
-  const apiBase = window.SIDII_API_BASE || 'https://sidi-backend-2ek5.onrender.com';
+  const apiBase = String(window.SIDII_API_BASE || 'http://localhost:5000/api').replace(/\/+$/, '');
 
   async function api(path, options = {}) {
     const token = localStorage.getItem('token');
