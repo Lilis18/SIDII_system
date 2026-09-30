@@ -1,0 +1,19 @@
+{
+  "id": "./",
+  "name": "Sistema Integral de Información Institucional",
+  "short_name": "SIDII",
+  "description": "Gestión institucional de indicadores de la Universidad Tecnológica de Puebla.",
+  "lang": "es-MX",
+  "start_url": "./login.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#7B1E3E",
+  "icons": [
+    {
+      "src": "public/utp-rojo.png",
+      "type": "image/png"
+    }
+  ]
+}
