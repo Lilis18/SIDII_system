@@ -7,16 +7,14 @@ const dataRoutes = require('./routes/data');
 const authRoutes = require('./routes/auth.routes');
 const subtiposRoutes = require('./routes/subtipos');
 const periodosRoutes = require('./routes/periodosRoutes')
+const cacheControl = require('./middleware/cache-control');
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET debe configurarse en backend/.env o en el entorno del servidor.');
 }
 
 const app = express();
-app.use((req, res, next) => {
-  res.set('Cache-Control', 'no-store, private');
-  next();
-});
+app.use(cacheControl);
 
 const normalizeOrigin = (value) => {
   try {
