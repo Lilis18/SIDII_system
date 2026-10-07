@@ -7,16 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const isAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
 	const forcedPeriods = new Set();
 	const periodNames = ['Enero - Abril', 'Mayo - Agosto', 'Septiembre - Diciembre'];
+	let currentPeriod = window.SIDII.getCurrentPeriodIndex();
 	const menu = document.querySelector('#dashboardNav');
 	const menuToggle = document.querySelector('#menuToggle');
 	const escapeHTML = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({
 		'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 	})[character]);
 
-	const periodIsCurrent = (index) => {
-		const month = new Date().getMonth() + 1;
-		return month >= index * 4 + 1 && month <= index * 4 + 4;
-	};
+	const periodIsCurrent = (index) => index === currentPeriod;
 	const periodEnabled = (index) => periodIsCurrent(index) || forcedPeriods.has(index);
 	window.SIDII.periodIsEnabled = periodEnabled;
 
@@ -33,6 +31,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	async function loadPeriods() {
 		try {
 			const response = await window.SIDII.api('/periods');
+			if (Number.isInteger(response.currentPeriod) && response.currentPeriod >= 0 && response.currentPeriod <= 2) {
+				currentPeriod = response.currentPeriod;
+			}
 			(response.forcedPeriods || []).forEach((index) => forcedPeriods.add(index));
 			renderProfile();
 		} catch (error) {

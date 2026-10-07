@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sidii-static-v1';
+const CACHE_NAME = 'sidii-static-v3';
 const CACHE_PREFIX = 'sidii-';
 const OFFLINE_URL = './offline.html';
 const PRECACHE_URLS = [
@@ -15,6 +15,7 @@ const PRECACHE_URLS = [
 	'./css/login.css',
 	'./css/dashboard.css',
 	'./css/evidenvias.css',
+	'./css/assistant.css',
 	'./public/utp-1.jpg',
 	'./js/api-config.js',
 	'./js/auth.js',
@@ -25,6 +26,7 @@ const PRECACHE_URLS = [
 	'./js/dasboard.js',
 	'./js/footer.js',
 	'./js/pwa.js',
+	'./js/assistant.js',
 	'./public/icon-192.png',
 	'./public/icon-512.png',
 ];

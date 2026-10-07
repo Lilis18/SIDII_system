@@ -53,8 +53,12 @@
 
   function initializeSharedControls() {
     const name = localStorage.getItem('nombre');
+    const hasSession = Boolean(localStorage.getItem('token'));
     document.querySelectorAll('#headerUser').forEach((element) => {
       element.textContent = name ? `Hola, ${name}` : '';
+    });
+    document.querySelectorAll('[data-session-back]').forEach((element) => {
+      element.hidden = !hasSession;
     });
 
     document.querySelectorAll('[data-logout]').forEach((button) => {
@@ -195,6 +199,14 @@
     await loadUsers();
   }
 
+  function getCurrentPeriodIndex(date = new Date()) {
+    const month = Number(new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Mexico_City',
+      month: 'numeric',
+    }).format(date));
+    return Math.floor((month - 1) / 4);
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initializeSharedControls();
     initializeRegisterForm();
@@ -202,5 +214,5 @@
     initializeUsersPage();
   });
 
-  window.SIDII = { api, saveSession, clearSession, requireSession, showMessage };
+  window.SIDII = { api, saveSession, clearSession, requireSession, showMessage, getCurrentPeriodIndex };
 })();

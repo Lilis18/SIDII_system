@@ -11,18 +11,10 @@
 		'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
 	})[character]);
 
-	const periodEndMonth = (name) => ({
-		'Enero - Abril': 4, 'Mayo - Agosto': 8, 'Septiembre - Diciembre': 12,
-	})[name] || 12;
-
-	const periodIsCurrent = (name) => new Date().getMonth() + 1 <= periodEndMonth(name);
-
-	function renderPeriodRows(container, existing = [], useDashboardRules = false) {
+	function renderPeriodRows(container, existing = []) {
 		container.innerHTML = periods.map((name, index) => {
 			const old = existing.find((period) => period.nombre === name) || {};
-			const disabled = useDashboardRules
-				? !window.SIDII.periodIsEnabled(index)
-				: !periodIsCurrent(name);
+			const disabled = !window.SIDII.periodIsEnabled(index);
 			return `<tr><td data-label="Periodo">${name}</td><td data-label="Programado"><input type="number" min="0" step="any" name="programado${index}" value="${escapeHTML(old.programado ?? '')}" ${disabled ? 'disabled' : ''}></td><td data-label="Realizado"><input type="number" min="0" step="any" name="realizado${index}" value="${escapeHTML(old.realizado ?? '')}" ${disabled ? 'disabled' : ''}></td></tr>`;
 		}).join('');
 	}
@@ -47,7 +39,7 @@
 		const subtypeSelect = form.elements.subtipo;
 		const periodBody = container.querySelector('#entryPeriods');
 		window.SIDII.showMessage(container.querySelector('#entryMessage'), '');
-		renderPeriodRows(periodBody, [], true);
+		renderPeriodRows(periodBody);
 
 		typeField.addEventListener('change', () => {
 			const options = subtypes[typeField.value] || [];

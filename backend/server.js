@@ -13,6 +13,11 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, private');
+  next();
+});
+
 const normalizeOrigin = (value) => {
   try {
     return new URL(value.trim().replace(/^(["'])(.*)\1$/, '$2')).origin;

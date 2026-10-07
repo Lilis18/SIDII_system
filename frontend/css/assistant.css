@@ -1,0 +1,83 @@
+.assistant-widget { position: fixed; inset: auto auto 18px 18px; z-index: 30; font-family: "Segoe UI", Tahoma, sans-serif; }
+
+.assistant-launcher {
+	min-height: 48px;
+	display: inline-flex;
+	align-items: center;
+	gap: 9px;
+	padding: 8px 16px 8px 9px;
+	border: 0;
+	border-radius: 24px;
+	background: #691c32;
+	color: #fff;
+	box-shadow: 0 5px 18px rgb(40 24 30 / 24%);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+.assistant-launcher > span:first-child {
+	width: 30px;
+	height: 30px;
+	display: grid;
+	place-items: center;
+	border-radius: 50%;
+	background: #c5a059;
+	color: #321e22;
+	font-size: 20px;
+}
+
+.assistant-launcher:hover { background: #4f1426; }
+.assistant-launcher:focus-visible, .assistant-panel button:focus-visible, .assistant-form input:focus-visible { outline: 3px solid #c5a059; outline-offset: 2px; }
+
+.assistant-panel {
+	position: absolute;
+	left: 0;
+	bottom: 60px;
+	width: min(370px, calc(100vw - 36px));
+	height: min(520px, calc(100dvh - 110px));
+	min-height: min(340px, calc(100dvh - 110px));
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	border: 1px solid #d9d2d0;
+	border-radius: 8px;
+	background: #fff;
+	box-shadow: 0 12px 38px rgb(40 24 30 / 22%);
+	animation: assistant-enter .18s ease-out both;
+}
+
+.assistant-panel[hidden] { display: none; }
+.assistant-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #691c32; color: #fff; }
+.assistant-header p { margin: 0 0 2px; color: #f1dca9; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.assistant-header h2 { margin: 0; font-size: 17px; }
+.assistant-close { width: 36px; height: 36px; border: 1px solid rgb(255 255 255 / 35%); border-radius: 4px; background: transparent; color: #fff; font-size: 25px; line-height: 1; cursor: pointer; }
+
+.assistant-messages { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; overflow-y: auto; padding: 15px; background: #f7f5f3; }
+.assistant-message { max-width: 92%; margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.assistant-message--bot { border: 1px solid #e2dcda; background: #fff; color: #30292b; }
+.assistant-message--user { align-self: flex-end; background: #691c32; color: #fff; }
+.assistant-action { width: fit-content; display: block; margin-top: 9px; padding: 6px 9px; border: 1px solid #c8b5b9; border-radius: 4px; background: #fff; color: #691c32; font: inherit; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.assistant-action:hover { background: #f6edef; }
+
+.assistant-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px 0; }
+.assistant-suggestions button { min-height: 30px; padding: 5px 8px; border: 1px solid #d6cccd; border-radius: 16px; background: #fff; color: #51464a; font: inherit; font-size: 11px; cursor: pointer; }
+.assistant-suggestions button:hover { border-color: #691c32; color: #691c32; }
+.assistant-form { display: flex; gap: 8px; padding: 10px 12px 12px; }
+.assistant-form input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 10px; border: 1px solid #cfc6c7; border-radius: 4px; color: #282225; font: inherit; font-size: 13px; }
+.assistant-form button { min-width: 68px; border: 0; border-radius: 4px; background: #691c32; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.assistant-form button:hover { background: #4f1426; }
+.assistant-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+
+@keyframes assistant-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (max-width: 480px) {
+	.assistant-widget { left: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
+	.assistant-panel { width: calc(100vw - 24px); height: min(520px, calc(100dvh - 96px)); min-height: min(320px, calc(100dvh - 96px)); bottom: 58px; }
+	.assistant-messages { padding: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.assistant-panel { animation: none; }
+}
