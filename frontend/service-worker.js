@@ -1,4 +1,5 @@
-const CACHE_NAME = 'sidii-static-v3';
+const STATIC_CACHE = 'sidii-static-v4';
+const RUNTIME_CACHE = 'sidii-runtime-v1';
 const CACHE_PREFIX = 'sidii-';
 const OFFLINE_URL = './offline.html';
 const PRECACHE_URLS = [
@@ -33,7 +34,7 @@ const PRECACHE_URLS = [
 
 self.addEventListener('install', (event) => {
 	event.waitUntil(
-		caches.open(CACHE_NAME).then((cache) =>
+		caches.open(STATIC_CACHE).then((cache) =>
 			cache.addAll(PRECACHE_URLS.map((url) => new URL(url, self.registration.scope).href)),
 		),
 	);
@@ -44,7 +45,8 @@ self.addEventListener('activate', (event) => {
 		caches.keys().then((cacheNames) =>
 			Promise.all(
 				cacheNames
-					.filter((cacheName) => cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME)
+					.filter((cacheName) => cacheName.startsWith(CACHE_PREFIX)
+						&& ![STATIC_CACHE, RUNTIME_CACHE].includes(cacheName))
 					.map((cacheName) => caches.delete(cacheName)),
 			),
 		).then(() => self.clients.claim()),
@@ -61,23 +63,27 @@ self.addEventListener('fetch', (event) => {
 	if (request.mode === 'navigate') {
 		event.respondWith(
 			fetch(request)
-				.catch(() => caches.match(OFFLINE_URL)),
+				.catch(async () => {
+					const cache = await caches.open(STATIC_CACHE);
+					return cache.match(new URL(OFFLINE_URL, self.registration.scope));
+				}),
 		);
 		return;
 	}
 
 	if (['script', 'style', 'image', 'font'].includes(request.destination)) {
 		event.respondWith(
-			caches.match(request).then((cachedResponse) => {
+			(async () => {
+				const staticCache = await caches.open(STATIC_CACHE);
+				const runtimeCache = await caches.open(RUNTIME_CACHE);
+				const cachedResponse = await staticCache.match(request)
+					|| await runtimeCache.match(request);
 				if (cachedResponse) return cachedResponse;
-				return fetch(request).then((response) => {
-					if (response.ok) {
-						const responseCopy = response.clone();
-						caches.open(CACHE_NAME).then((cache) => cache.put(request, responseCopy));
-					}
-					return response;
-				});
-			}),
+
+				const response = await fetch(request);
+				if (response.ok) await runtimeCache.put(request, response.clone());
+				return response;
+			})(),
 		);
 	}
 });
