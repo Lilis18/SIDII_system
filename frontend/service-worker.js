@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'sidii-static-v4';
+const STATIC_CACHE = 'sidii-static-v5';
 const RUNTIME_CACHE = 'sidii-runtime-v1';
 const CACHE_PREFIX = 'sidii-';
 const OFFLINE_URL = './offline.html';
@@ -16,7 +16,7 @@ const PRECACHE_URLS = [
 	'./css/global.css',
 	'./css/login.css',
 	'./css/dashboard.css',
-	'./css/evidencias.css',
+	'./css/evidenvias.css',
 	'./css/assistant.css',
 	'./public/utp-1.jpg',
 	'./js/api-config.js',
@@ -25,7 +25,7 @@ const PRECACHE_URLS = [
 	'./js/cargaDeDatos.js',
 	'./js/evidencias.js',
 	'./js/grafico.js',
-	'./js/dashboard.js',
+	'./js/dasboard.js',
 	'./js/footer.js',
 	'./js/pwa.js',
 	'./js/assistant.js',
