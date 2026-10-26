@@ -180,7 +180,7 @@ self.addEventListener('fetch', (event) => {
 	}
 	if (requestUrl.origin !== self.location.origin) return;
 
-	if (request.mode === 'navigate') {
+	/* if (request.mode === 'navigate') {
 		event.respondWith(
 			fetch(request)
 				.then(async (response) => {
@@ -203,7 +203,7 @@ self.addEventListener('fetch', (event) => {
 				}),
 		);
 		return;
-	}
+	}*/
 
 	if (['script', 'style', 'image', 'font'].includes(request.destination)) {
         event.respondWith(
