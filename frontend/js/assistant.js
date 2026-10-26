@@ -1,4 +1,5 @@
 (() => {
+	const apiBase = String(window.SIDII_API_BASE || 'http://localhost:5000/api').replace(/\/+$/, '');
 	const answers = [
 		{
 			match: /contrase|password/,
@@ -20,6 +21,7 @@
 				return `En ${month}, el periodo vigente es ${period}. Los otros periodos solo se habilitan mediante un override de SUPER ADMIN.`;
 			},
 			tab: 'perfil',
+			notification: true,
 		},
 		{
 			match: /evidencia|pdf|firma|documento/,
@@ -61,6 +63,29 @@
 		return value.toLocaleLowerCase('es-MX').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 	}
 
+	async function chatRequest(endpoint, options = {}) {
+		const token = localStorage.getItem('token');
+		if (!token) throw new Error('Se requiere una sesión para acceder al historial.');
+
+		const headers = { Authorization: `Bearer ${token}`, ...(options.headers || {}) };
+		if (options.body) headers['Content-Type'] = 'application/json';
+		const controller = new AbortController();
+		const timeout = window.setTimeout(() => controller.abort(), 10000);
+
+		try {
+			const response = await fetch(`${apiBase}/chat/${endpoint}`, {
+				...options,
+				headers,
+				signal: controller.signal,
+			});
+			const result = await response.json().catch(() => null);
+			if (!response.ok) throw new Error(result?.msg || 'No se pudo completar la solicitud del chat.');
+			return result;
+		} finally {
+			window.clearTimeout(timeout);
+		}
+	}
+
 	function getAnswer(question) {
 		const normalized = normalize(question);
 		const answer = answers.find((item) => item.match.test(normalized));
@@ -94,6 +119,7 @@
 				<div class="assistant-messages" role="log" aria-live="polite" aria-relevant="additions">
 					<p class="assistant-message assistant-message--bot">Hola. Puedo guiarte por la página y responder dudas frecuentes. ¿Qué necesitas hacer?</p>
 				</div>
+				<p class="assistant-status" role="status" aria-live="polite" hidden></p>
 				<div class="assistant-suggestions" aria-label="Preguntas frecuentes">
 					<button type="button" data-question="¿Cómo cargo datos?">Cargar datos</button>
 					<button type="button" data-question="¿Qué periodo está activo?">Periodo activo</button>
@@ -111,8 +137,22 @@
 		const panel = widget.querySelector('.assistant-panel');
 		const closeButton = widget.querySelector('.assistant-close');
 		const messageList = widget.querySelector('.assistant-messages');
+		const status = widget.querySelector('.assistant-status');
 		const form = widget.querySelector('.assistant-form');
 		const input = widget.querySelector('#assistantInput');
+		const suggestionButtons = [...widget.querySelectorAll('[data-question]')];
+		const submitButton = form.querySelector('[type="submit"]');
+
+		function setBusy(busy) {
+			input.disabled = busy;
+			submitButton.disabled = busy;
+			suggestionButtons.forEach((button) => { button.disabled = busy; });
+		}
+
+		function showStatus(message) {
+			status.textContent = message;
+			status.hidden = !message;
+		}
 
 		function setOpen(open) {
 			panel.hidden = !open;
@@ -148,28 +188,81 @@
 			messageList.scrollTop = messageList.scrollHeight;
 		}
 
-		function submitQuestion(question) {
+		async function persistMessage(mensaje, rol) {
+			if (!localStorage.getItem('token')) return true;
+			try {
+				await chatRequest('save', {
+					method: 'POST',
+					body: JSON.stringify({ mensaje, rol }),
+				});
+				return true;
+			} catch (error) {
+				console.error('No se pudo guardar el mensaje del asistente:', error);
+				return false;
+			}
+		}
+
+		async function loadHistory() {
+			if (!localStorage.getItem('token')) return;
+			setBusy(true);
+			try {
+				const history = await chatRequest('history');
+				if (!Array.isArray(history)) throw new Error('La respuesta del historial no es válida.');
+				const validMessages = history.filter((entry) =>
+					typeof entry.mensaje === 'string' && ['usuario', 'bot'].includes(entry.rol),
+				);
+				if (validMessages.length) {
+					messageList.replaceChildren();
+					validMessages.forEach((entry) => addMessage(entry.mensaje, entry.rol === 'usuario' ? 'user' : 'bot'));
+				}
+			} catch (error) {
+				console.error('No se pudo cargar el historial del asistente:', error);
+				showStatus('No se pudo recuperar el historial. Puedes seguir usando la ayuda.');
+			} finally {
+				setBusy(false);
+			}
+		}
+
+		async function submitQuestion(question) {
 			const cleanQuestion = question.trim();
 			if (!cleanQuestion) return;
-			addMessage(cleanQuestion, 'user');
-			const answer = getAnswer(cleanQuestion);
-			addMessage(answer.text, 'bot', answer);
+			setBusy(true);
+			showStatus('');
+			try {
+				addMessage(cleanQuestion, 'user');
+				const userMessageSaved = await persistMessage(cleanQuestion, 'usuario');
+				const answer = getAnswer(cleanQuestion);
+				addMessage(answer.text, 'bot', answer);
+				if (answer.notification) {
+					window.mostrarNotificacion?.('SIDII', 'El Chatbot Asistente tiene una sugerencia normativa para ti');
+				}
+				const botMessageSaved = await persistMessage(answer.text, 'bot');
+				if (!userMessageSaved || !botMessageSaved) {
+					showStatus('No se pudo guardar parte de esta conversación. Revisa tu conexión e inténtalo de nuevo.');
+				}
+			} finally {
+				setBusy(false);
+			}
 		}
 
 		launcher.addEventListener('click', () => setOpen(panel.hidden));
 		closeButton.addEventListener('click', () => setOpen(false));
 		form.addEventListener('submit', (event) => {
 			event.preventDefault();
-			submitQuestion(input.value);
+			void submitQuestion(input.value);
 			input.value = '';
 		});
-		widget.querySelectorAll('[data-question]').forEach((button) => {
-			button.addEventListener('click', () => submitQuestion(button.dataset.question));
+		suggestionButtons.forEach((button) => {
+			button.addEventListener('click', () => { void submitQuestion(button.dataset.question); });
 		});
 		document.addEventListener('keydown', (event) => {
 			if (event.key === 'Escape' && !panel.hidden) setOpen(false);
 		});
+		void loadHistory();
 	}
 
 	document.addEventListener('DOMContentLoaded', mountAssistant, { once: true });
+	window.addEventListener('offline', () => {
+		window.mostrarNotificacion?.('SIDII', 'La aplicación detectó que te quedaste sin conexión. Algunas funciones no estarán disponibles.');
+	});
 })();

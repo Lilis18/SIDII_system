@@ -55,6 +55,7 @@
 .assistant-close { width: 36px; height: 36px; border: 1px solid rgb(255 255 255 / 35%); border-radius: 4px; background: transparent; color: #fff; font-size: 25px; line-height: 1; cursor: pointer; }
 
 .assistant-messages { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; overflow-y: auto; padding: 15px; background: #f7f5f3; }
+.assistant-status { margin: 0; padding: 7px 12px 0; color: #8b3d2f; font-size: 12px; }
 .assistant-message { max-width: 92%; margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
 .assistant-message--bot { border: 1px solid #e2dcda; background: #fff; color: #30292b; }
 .assistant-message--user { align-self: flex-end; background: #691c32; color: #fff; }

@@ -7,6 +7,7 @@ const dataRoutes = require('./routes/data');
 const authRoutes = require('./routes/auth.routes');
 const subtiposRoutes = require('./routes/subtipos');
 const periodosRoutes = require('./routes/periodosRoutes')
+const chatRoutes = require('./routes/chat.routes');
 const cacheControl = require('./middleware/cache-control');
 
 if (!process.env.JWT_SECRET) {
@@ -46,6 +47,7 @@ app.use('/api/data', dataRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/subtipos', subtiposRoutes);
 app.use('/api/periods', periodosRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error 404 para rutas no encontradas
 app.use((req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));

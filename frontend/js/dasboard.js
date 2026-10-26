@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const isAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
 	const forcedPeriods = new Set();
 	const periodNames = ['Enero - Abril', 'Mayo - Agosto', 'Septiembre - Diciembre'];
+	const dashboardTabs = new Set(['perfil', 'cargar', 'evidencias', 'graficos', 'edicion']);
+	const savedTabKey = 'sidii_last_dashboard_tab';
 	let currentPeriod = window.SIDII.getCurrentPeriodIndex();
 	const menu = document.querySelector('#dashboardNav');
 	const menuToggle = document.querySelector('#menuToggle');
@@ -64,6 +66,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 	});
 
 	function changeTab(tab) {
+		if (!dashboardTabs.has(tab)) return;
+		localStorage.setItem(savedTabKey, tab);
 		document.querySelectorAll('[data-tab]').forEach((button) => {
 			const active = button.dataset.tab === tab;
 			button.classList.toggle('is-active', active);
@@ -93,4 +97,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 	renderProfile();
 	await loadPeriods();
+	const savedTab = localStorage.getItem(savedTabKey);
+	if (dashboardTabs.has(savedTab)) changeTab(savedTab);
 });

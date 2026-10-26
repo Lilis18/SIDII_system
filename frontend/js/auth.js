@@ -27,6 +27,11 @@
   }
 
   function clearSession() {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((registration) => registration.active?.postMessage({ type: 'CLEAR_API_CACHE' }))
+        .catch(() => {});
+    }
     ['token', 'nombre', 'role'].forEach((key) => localStorage.removeItem(key));
   }
 
