@@ -27,6 +27,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 [hidden] { display: none !important; }
 
+.connection-status {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 10px 16px;
+  color: #fff;
+  background: #8c1d2c;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .app-page { display: flex; flex-direction: column; }
 
 .app-header {

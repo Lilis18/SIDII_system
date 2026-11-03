@@ -13,6 +13,56 @@ if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
 	});
 }
 
+function showConnectionStatus(message) {
+	let status = document.querySelector('#sidiiConnectionStatus');
+	if (!status) {
+		status = document.createElement('div');
+		status.id = 'sidiiConnectionStatus';
+		status.className = 'connection-status';
+		status.setAttribute('role', 'status');
+		status.setAttribute('aria-live', 'polite');
+		document.body.prepend(status);
+	}
+	status.textContent = message;
+	status.hidden = !message;
+}
+
+function updateConnectionStatus() {
+	showConnectionStatus(navigator.onLine ? '' : 'Sin conexión a internet. Puedes consultar los últimos datos guardados y capturar cambios offline.');
+}
+
+window.addEventListener('online', () => {
+	showConnectionStatus('Conexión restablecida. Sincronizando los cambios pendientes...');
+	window.setTimeout(updateConnectionStatus, 5000);
+});
+window.addEventListener('offline', updateConnectionStatus);
+window.addEventListener('sidii:offline-sync', (event) => {
+	const { synchronized, pending, authRequired, error } = event.detail;
+	showConnectionStatus(pending
+		? (authRequired
+			? 'Hay cambios pendientes. Inicia sesión en línea para actualizar tu sesión y sincronizarlos.'
+			: 'No se pudieron sincronizar todos los cambios. Se volverá a intentar al recuperar la conexión.')
+		: (error ? 'No se pudo revisar la cola offline.' : `Conexión restablecida. ${synchronized} cambio(s) sincronizado(s).`));
+	window.setTimeout(updateConnectionStatus, 5000);
+});
+
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', updateConnectionStatus, { once: true });
+} else {
+	updateConnectionStatus();
+}
+function showOfflineAuthWarning() {
+	if (!sessionStorage.getItem('sidii.offlineAuthWarning')) return;
+	sessionStorage.removeItem('sidii.offlineAuthWarning');
+	showConnectionStatus('Sesión iniciada, pero no se pudo habilitar el inicio offline en este dispositivo.');
+	window.setTimeout(updateConnectionStatus, 7000);
+}
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', showOfflineAuthWarning, { once: true });
+} else {
+	showOfflineAuthWarning();
+}
+
 async function solicitarPermisoNotificaciones() {
 	if (!('Notification' in window)) return 'unsupported';
 	if (Notification.permission !== 'default') return Notification.permission;

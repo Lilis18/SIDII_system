@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'sidii-static-v12';
+const STATIC_CACHE = 'sidii-static-v13';
 const RUNTIME_CACHE = 'sidii-runtime-v1';
 const PAGE_CACHE = 'sidii-pages-v1';
 const CACHE_PREFIX = 'sidii-';
@@ -136,10 +136,6 @@ async function networkFirstApi(request) {
 	const cache = await caches.open(cacheKey.cacheName);
 	try {
 		const response = await fetch(request);
-		if (response.status === 401 || response.status === 403) {
-			await caches.delete(cacheKey.cacheName);
-			return response;
-		}
 		if (response.status >= 500) {
 			const cachedResponse = await getCachedApiResponse(cache, cacheKey.request);
 			if (cachedResponse) return cachedResponse;
@@ -179,7 +175,7 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 	if (requestUrl.origin !== self.location.origin) return;
-
+// Comentar estas lineas para pruebas de internet
 	if (request.mode === 'navigate') {
 		event.respondWith(
 			fetch(request)
@@ -225,4 +221,3 @@ self.addEventListener('fetch', (event) => {
         );
     }
 });
-

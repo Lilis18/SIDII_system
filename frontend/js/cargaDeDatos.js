@@ -69,10 +69,16 @@
 			}
 			submit.disabled = true;
 			try {
-				await window.SIDII.api('/data/guardar', { method: 'POST', body: JSON.stringify(payload) });
+				const result = await window.SIDII.api('/data/guardar', { method: 'POST', body: JSON.stringify(payload) });
 				form.reset();
 				subtypeField.hidden = true;
-				window.SIDII.showMessage(message, 'Datos guardados correctamente.', 'success');
+				window.SIDII.showMessage(
+					message,
+					result?.queuedOffline
+						? 'Datos guardados en este dispositivo. Se sincronizarán automáticamente al recuperar la conexión.'
+						: 'Datos guardados correctamente.',
+					'success',
+				);
 			} catch (error) {
 				window.SIDII.showMessage(message, error.message || 'No se pudieron guardar los datos.');
 			} finally {

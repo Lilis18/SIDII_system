@@ -5,9 +5,24 @@ const { protect } = require('../middleware/authMiddleware'); // Middleware para 
 
 // Ruta para guardar datos
 router.post('/guardar', protect, async (req, res) => {
+  const offlineOperationId = req.get('X-SIDII-Operation-Id');
   try {
+    if (offlineOperationId) {
+      if (offlineOperationId.length > 100) {
+        return res.status(400).json({ msg: 'Identificador de operación no válido' });
+      }
+      const alreadySaved = await Data.findOne({
+        usuario: req.user.id,
+        offlineOperationId
+      }).select('+offlineOperationId');
+      if (alreadySaved) {
+        return res.status(200).json({ message: 'Datos guardados correctamente' });
+      }
+    }
+
     const nuevoDato = new Data({
       usuario: req.user.id,
+      ...(offlineOperationId ? { offlineOperationId } : {}),
       tipo: req.body.tipo,
       subtipo: req.body.subtipo,
       resumen: req.body.resumen,
@@ -18,6 +33,15 @@ router.post('/guardar', protect, async (req, res) => {
     await nuevoDato.save();
     res.status(201).json({ message: 'Datos guardados correctamente' });
   } catch (error) {
+    if (offlineOperationId && error.code === 11000) {
+      const alreadySaved = await Data.findOne({
+        usuario: req.user.id,
+        offlineOperationId
+      }).select('+offlineOperationId');
+      if (alreadySaved) {
+        return res.status(200).json({ message: 'Datos guardados correctamente' });
+      }
+    }
     console.error(error);
     res.status(500).json({ message: 'Error al guardar los datos' });
   }
