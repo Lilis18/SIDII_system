@@ -175,7 +175,6 @@ self.addEventListener('fetch', (event) => {
 		return;
 	}
 	if (requestUrl.origin !== self.location.origin) return;
-// Comentar estas lineas para pruebas de internet
 	if (request.mode === 'navigate') {
 		event.respondWith(
 			fetch(request)
