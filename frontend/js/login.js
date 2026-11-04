@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			if (!navigator.onLine) {
 				const authenticated = await window.SIDII.authenticateOffline(email, password.value);
 				if (!authenticated) {
-					throw new Error('Sin conexión: solo puede ingresar el usuario autenticado previamente en este dispositivo y con su contraseña correcta.');
+					throw new Error('Sin conexión');
 				}
 			} else {
 				try {
