@@ -1,17 +1,17 @@
 .evidence-form { display: grid; gap: 18px; }
-.evidence-form h2 { margin: 10px 0 0; color: #27272a; font-size: 18px; }
+.evidence-form h2 { margin: 10px 0 0; color: #333; font-size: 18px; }
 .evidence-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.evidence-grid > label { display: grid; gap: 6px; color: #3f3f46; font-size: 13px; font-weight: 700; }
-.evidence-grid input, .evidence-grid textarea, .file-picker input { width: 100%; min-height: 40px; padding: 9px; border: 1px solid #d4d4d8; border-radius: 4px; background: #fff; }
+.evidence-grid > label { display: grid; gap: 6px; color: #444; font-size: 13px; font-weight: 700; }
+.evidence-grid input, .evidence-grid textarea, .file-picker input { width: 100%; min-height: 40px; padding: 9px; border: 1px solid #cfc6c7; border-radius: 4px; background: #fff; }
 .evidence-grid textarea { resize: vertical; }
 .evidence-grid fieldset { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--color-borde); }
 .evidence-grid legend { padding: 0 5px; color: var(--color-guinda); font-weight: 700; }
-.evidence-grid fieldset label { display: grid; gap: 6px; color: #3f3f46; font-size: 13px; font-weight: 650; }
+.evidence-grid fieldset label { display: grid; gap: 6px; color: #444; font-size: 13px; font-weight: 650; }
 .evidence-meta-table { min-width: 760px; }
 .evidence-meta-table th, .evidence-meta-table td { padding: 6px; text-align: center; }
 .evidence-meta-table input { width: 100%; min-width: 65px; min-height: 36px; padding: 6px; border: 1px solid #ddd; border-radius: 3px; }
-.file-picker { display: grid; gap: 7px; color: #3f3f46; font-size: 13px; font-weight: 700; }
-.evidence-document { margin-top: 26px; padding: 28px; border: 1px solid #d4d4d8; background: #fff; color: #18181b; }
+.file-picker { display: grid; gap: 7px; color: #444; font-size: 13px; font-weight: 700; }
+.evidence-document { margin-top: 26px; padding: 28px; border: 1px solid #d7d0ce; background: #fff; color: #171414; }
 .document-letterhead { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding-bottom: 14px; border-bottom: 1px solid #ccc; }
 .document-letterhead img { width: min(300px, 44%); height: auto; object-fit: contain; }
 .document-letterhead p { font-size: 11px; line-height: 1.5; text-align: right; }

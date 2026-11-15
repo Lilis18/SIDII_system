@@ -8,9 +8,9 @@
 	padding: 8px 16px 8px 9px;
 	border: 0;
 	border-radius: 24px;
-	background: #18181b;
+	background: #242424;
 	color: #fff;
-	box-shadow: 0 5px 18px rgb(24 24 27 / 24%);
+	box-shadow: 0 5px 18px rgb(0 0 0 / 24%);
 	font: inherit;
 	font-size: 14px;
 	font-weight: 700;
@@ -23,13 +23,13 @@
 	display: grid;
 	place-items: center;
 	border-radius: 50%;
-	background: #71717a;
+	background: #777;
 	color: #fff;
 	font-size: 20px;
 }
 
-.assistant-launcher:hover { background: #3f3f46; }
-.assistant-launcher:focus-visible, .assistant-panel button:focus-visible, .assistant-form input:focus-visible { outline: 3px solid #71717a; outline-offset: 2px; }
+.assistant-launcher:hover { background: #111; }
+.assistant-launcher:focus-visible, .assistant-panel button:focus-visible, .assistant-form input:focus-visible { outline: 3px solid #777; outline-offset: 2px; }
 
 .assistant-panel {
 	position: absolute;
@@ -41,34 +41,34 @@
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
-	border: 1px solid #d4d4d8;
+	border: 1px solid #d0d0d0;
 	border-radius: 8px;
 	background: #fff;
-	box-shadow: 0 12px 38px rgb(24 24 27 / 22%);
+	box-shadow: 0 12px 38px rgb(0 0 0 / 22%);
 	animation: assistant-enter .18s ease-out both;
 }
 
 .assistant-panel[hidden] { display: none; }
-.assistant-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #18181b; color: #fff; }
-.assistant-header p { margin: 0 0 2px; color: #d4d4d8; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.assistant-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #242424; color: #fff; }
+.assistant-header p { margin: 0 0 2px; color: #ccc; font-size: 10px; font-weight: 700; text-transform: uppercase; }
 .assistant-header h2 { margin: 0; font-size: 17px; }
 .assistant-close { width: 36px; height: 36px; border: 1px solid rgb(255 255 255 / 35%); border-radius: 4px; background: transparent; color: #fff; font-size: 25px; line-height: 1; cursor: pointer; }
 
-.assistant-messages { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; overflow-y: auto; padding: 15px; background: #f4f4f5; }
-.assistant-status { margin: 0; padding: 7px 12px 0; color: #52525b; font-size: 12px; }
+.assistant-messages { flex: 1; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; overflow-y: auto; padding: 15px; background: #f2f2f2; }
+.assistant-status { margin: 0; padding: 7px 12px 0; color: #555; font-size: 12px; }
 .assistant-message { max-width: 92%; margin: 0; padding: 10px 12px; border-radius: 8px; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
-.assistant-message--bot { border: 1px solid #e4e4e7; background: #fff; color: #27272a; }
-.assistant-message--user { align-self: flex-end; background: #18181b; color: #fff; }
-.assistant-action { width: fit-content; display: block; margin-top: 9px; padding: 6px 9px; border: 1px solid #d4d4d8; border-radius: 4px; background: #fff; color: #18181b; font: inherit; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; }
-.assistant-action:hover { background: #f4f4f5; }
+.assistant-message--bot { border: 1px solid #ddd; background: #fff; color: #222; }
+.assistant-message--user { align-self: flex-end; background: #444; color: #fff; }
+.assistant-action { width: fit-content; display: block; margin-top: 9px; padding: 6px 9px; border: 1px solid #bbb; border-radius: 4px; background: #fff; color: #222; font: inherit; font-size: 12px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.assistant-action:hover { background: #eee; }
 
 .assistant-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 12px 0; }
-.assistant-suggestions button { min-height: 30px; padding: 5px 8px; border: 1px solid #d4d4d8; border-radius: 16px; background: #fff; color: #3f3f46; font: inherit; font-size: 11px; cursor: pointer; }
-.assistant-suggestions button:hover { border-color: #18181b; color: #18181b; }
+.assistant-suggestions button { min-height: 30px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 16px; background: #fff; color: #444; font: inherit; font-size: 11px; cursor: pointer; }
+.assistant-suggestions button:hover { border-color: #444; color: #222; }
 .assistant-form { display: flex; gap: 8px; padding: 10px 12px 12px; }
-.assistant-form input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 10px; border: 1px solid #d4d4d8; border-radius: 4px; color: #18181b; font: inherit; font-size: 13px; }
-.assistant-form button { min-width: 68px; border: 0; border-radius: 4px; background: #18181b; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
-.assistant-form button:hover { background: #3f3f46; }
+.assistant-form input { flex: 1; min-width: 0; min-height: 42px; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; color: #222; font: inherit; font-size: 13px; }
+.assistant-form button { min-width: 68px; border: 0; border-radius: 4px; background: #242424; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.assistant-form button:hover { background: #111; }
 .assistant-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
 
 @keyframes assistant-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

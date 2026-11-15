@@ -1,7 +1,7 @@
 :root {
-	--login-ink: #18181b;
-	--login-red: #18181b;
-	--login-gold: #71717a;
+	--login-ink: #222;
+	--login-red: #242424;
+	--login-gold: #777;
 }
 
 .auth-page {
@@ -10,7 +10,7 @@
 	place-items: center;
 	padding: 32px 18px;
 	color: var(--login-ink);
-	background: linear-gradient(135deg, rgb(24 24 27 / 82%), rgb(82 82 91 / 48%)),
+	background: linear-gradient(135deg, rgba(0, 0, 0, .82), rgba(65, 65, 65, .5)),
 		url("../public/utp-1.jpg") center / cover fixed;
 }
 
@@ -45,7 +45,7 @@
 	border: 1px solid rgba(255, 255, 255, .56);
 	border-radius: 8px;
 	background: rgba(255, 255, 255, .94);
-	box-shadow: 0 20px 55px rgba(31, 10, 16, .28);
+	box-shadow: 0 20px 55px rgba(0, 0, 0, .28);
 }
 
 .auth-form { display: grid; gap: 18px; }
@@ -58,7 +58,7 @@
 
 .form-intro {
 	margin-top: -12px;
-	color: #52525b;
+	color: #666;
 	font-size: 14px;
 	text-align: center;
 }
@@ -77,14 +77,14 @@
 	width: 100%;
 	min-height: 44px;
 	padding: 10px 12px;
-	border: 1px solid #d4d4d8;
+	border: 1px solid #cfc7c8;
 	border-radius: 4px;
 	background: #fff;
 	color: var(--login-ink);
 }
 
 .input-group input:focus {
-	outline: 3px solid rgb(113 113 122 / 30%);
+	outline: 3px solid rgba(100, 100, 100, .25);
 	border-color: var(--login-red);
 }
 
@@ -122,13 +122,13 @@
 	transition: background-color .18s ease, transform .18s ease;
 }
 
-.btn-login:hover { background: #3f3f46; }
+.btn-login:hover { background: #111; }
 .btn-login:active { transform: translateY(1px); }
 .btn-login:disabled { opacity: .65; cursor: wait; }
 
 .form-message {
 	margin: -8px 0;
-	color: #52525b;
+	color: #444;
 	font-size: 14px;
 	text-align: center;
 }

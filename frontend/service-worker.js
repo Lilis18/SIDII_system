@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'sidii-static-v13';
+const STATIC_CACHE = 'sidii-static-v14';
 const RUNTIME_CACHE = 'sidii-runtime-v1';
 const PAGE_CACHE = 'sidii-pages-v1';
 const CACHE_PREFIX = 'sidii-';
