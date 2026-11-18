@@ -1,8 +1,9 @@
-const STATIC_CACHE = 'sidii-static-v14';
+const STATIC_CACHE = 'sidii-static-v16';
 const RUNTIME_CACHE = 'sidii-runtime-v1';
 const PAGE_CACHE = 'sidii-pages-v1';
 const CACHE_PREFIX = 'sidii-';
 const API_CACHE_PREFIX = 'sidii-api-v1-';
+const PREAUDIT_CACHE_PREFIX = 'sidii-preauditorias-v2-';
 const OFFLINE_URL = './offline.html';
 const API_ORIGIN = (() => {
 	try {
@@ -27,6 +28,7 @@ const PRECACHE_URLS = [
 	'./css/login.css',
 	'./css/dashboard.css',
 	'./css/evidenvias.css',
+	'./css/auditorias.css',
 	'./css/assistant.css',
 	'./public/utp-1.jpg',
 	'./js/api-config.js',
@@ -34,6 +36,7 @@ const PRECACHE_URLS = [
 	'./js/login.js',
 	'./js/cargaDeDatos.js',
 	'./js/evidencias.js',
+	'./js/auditorias.js',
 	'./js/grafico.js',
 	'./js/dasboard.js',
 	'./js/footer.js',
@@ -67,7 +70,8 @@ self.addEventListener('activate', (event) => {
                 cacheNames
                     .filter((cacheName) => cacheName.startsWith(CACHE_PREFIX) 
 						&& ![STATIC_CACHE, RUNTIME_CACHE, PAGE_CACHE].includes(cacheName)
-						&& !cacheName.startsWith(API_CACHE_PREFIX))
+						&& !cacheName.startsWith(API_CACHE_PREFIX)
+						&& !cacheName.startsWith(PREAUDIT_CACHE_PREFIX))
                     // Uso de caches.delete() para eliminar cachés de versiones antiguas
                     .map((cacheName) => {
                         console.log(`[SW] Eliminando caché obsoleta: ${cacheName}`);

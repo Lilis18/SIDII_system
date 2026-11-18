@@ -1,0 +1,49 @@
+.preaudit-notification-host { position: fixed; z-index: 1200; top: 18px; right: 18px; display: grid; gap: 10px; width: min(390px, calc(100vw - 36px)); }
+.preaudit-toast { padding: 16px; border: 1px solid #c9c2c2; border-left: 4px solid #8c2432; border-radius: 7px; background: #fff; color: #222; box-shadow: 0 12px 36px rgba(0,0,0,.16); }
+.preaudit-toast strong { display: block; font-size: 14px; }
+.preaudit-toast p { margin: 6px 0 12px; color: #555; font-size: 13px; }
+.preaudit-toast-actions, .preaudit-dialog-actions, .preaudit-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+.preaudit-dialog { width: min(920px, calc(100vw - 28px)); max-width: 920px; max-height: min(90vh, 900px); padding: 0; border: 1px solid #cfc8c8; border-radius: 10px; color: #222; box-shadow: 0 20px 70px rgba(0,0,0,.28); }
+.preaudit-dialog::backdrop { background: rgba(20,18,18,.58); }
+.preaudit-dialog-header { position: sticky; top: 0; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 20px 24px; border-bottom: 1px solid #ddd; background: #fff; }
+.preaudit-dialog-header h2 { margin: 3px 0 4px; font-size: 22px; }
+.preaudit-subtitle { margin: 0; color: #666; font-size: 13px; }
+.preaudit-close { width: 36px; height: 36px; border: 1px solid #ddd; border-radius: 50%; background: #fff; color: #333; font-size: 24px; line-height: 1; cursor: pointer; }
+.preaudit-dialog-content { display: grid; gap: 18px; padding: 22px 24px 26px; overflow-y: auto; max-height: calc(90vh - 82px); }
+.preaudit-dialog-content section { display: grid; gap: 9px; }
+.preaudit-dialog-content section h3, .preaudit-review-form h3 { margin: 0; color: #292929; font-size: 15px; }
+.preaudit-dialog-content p { margin: 0; color: #454545; font-size: 13px; line-height: 1.55; white-space: pre-wrap; }
+.preaudit-meta { display: flex; flex-wrap: wrap; gap: 8px 18px; color: #666; font-size: 11px; }
+.preaudit-level { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid #ddd; border-radius: 6px; background: #f7f7f7; font-size: 13px; }
+.preaudit-level strong { font-size: 15px; }
+.preaudit-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.preaudit-list li { display: grid; gap: 4px; padding: 12px; border: 1px solid #e0dddd; border-radius: 5px; }
+.preaudit-list strong { font-size: 13px; }
+.preaudit-list small { color: #666; font-size: 11px; }
+.preaudit-severity { justify-self: start; padding: 3px 7px; border-radius: 3px; background: #efeded; color: #4b4444; font-size: 10px; font-weight: 750; }
+.preaudit-checks { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.preaudit-checks > div { padding: 10px; border: 1px solid #e0dddd; border-radius: 5px; }
+.preaudit-checks strong { font-size: 12px; }
+.preaudit-checks span { float: right; color: #555; font-size: 11px; font-weight: 700; }
+.preaudit-checks p { clear: both; padding-top: 5px; font-size: 11px; }
+.preaudit-disclaimer, .preaudit-readonly-note, .preaudit-offline-label { padding: 10px 12px; border-left: 3px solid #999; background: #f4f4f4; color: #555 !important; font-size: 12px !important; }
+.preaudit-review-form { display: grid; gap: 12px; padding-top: 15px; border-top: 1px solid #ddd; }
+.preaudit-review-form label { display: grid; gap: 6px; color: #444; font-size: 12px; font-weight: 700; }
+.preaudit-review-form select, .preaudit-review-form textarea { width: 100%; padding: 10px; border: 1px solid #cfcaca; border-radius: 5px; background: #fff; color: #222; font: inherit; font-weight: 400; }
+.preaudit-review-form textarea { resize: vertical; }
+.preaudit-message { color: #8c2432 !important; font-weight: 650; }
+.preaudit-dialog-actions { padding-top: 8px; border-top: 1px solid #e1dddd; }
+.preaudit-final-success { display: grid; gap: 16px; padding: 15px 0; }
+.preaudit-final-success h3 { margin: 0; font-size: 20px; }
+.preaudit-toolbar { justify-content: space-between; margin-bottom: 14px; color: #666; font-size: 12px; }
+.preaudit-empty { padding: 20px; border: 1px dashed #cfcaca; color: #666; text-align: center; }
+.preaudit-table { min-width: 760px; }
+@media (max-width: 640px) {
+  .preaudit-dialog-header { padding: 16px; }
+  .preaudit-dialog-content { padding: 16px; }
+  .preaudit-checks { grid-template-columns: 1fr; }
+  .preaudit-level { align-items: flex-start; flex-direction: column; }
+}
+
+.preaudit-evidence-quote { margin: 10px 0 0; padding: 9px 12px; border-left: 3px solid #7a1837; background: #f7f3f4; color: #454045; font-size: .88rem; }
+.preaudit-evidence-quote strong { display: block; margin-bottom: 4px; }
