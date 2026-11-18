@@ -56,6 +56,8 @@ Las altas desde **Cargar datos** que fallen por falta de red se guardan en Index
 10. Inicia sesión y abre el asistente. En **Network**, filtra por `chat`: `GET /api/chat/history` debe responder `200`; al enviar una pregunta deben aparecer dos `POST /api/chat/save`, con `rol: "usuario"` y `rol: "bot"`, ambos con respuesta `201`. Recarga y confirma que el historial vuelve a pintarse. No compartas capturas que muestren el valor de `Authorization`.
 11. En el dashboard, permite notificaciones cuando el navegador lo solicite. Pregunta por el periodo vigente para comprobar el aviso del asistente y selecciona **Network > Offline** para comprobar el aviso de desconexión. El navegador debe tener concedido el permiso.
 
+Al servir el frontend localmente con XAMPP, el origen suele ser `http://localhost` o `http://127.0.0.1` (sin el puerto `8081`). El backend debe permitir esos orígenes en CORS; el backend del repositorio ya incluye ambos y los puertos `8081` habituales para desarrollo. Después de desplegar un cambio del backend, reinicia/actualiza el servicio para que la configuración tome efecto.
+
 También puedes inspeccionar los registros desde **Console**:
 
 ```js
