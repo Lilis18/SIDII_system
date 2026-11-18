@@ -7,7 +7,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 	const isAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
 	const forcedPeriods = new Set();
 	const periodNames = ['Enero - Abril', 'Mayo - Agosto', 'Septiembre - Diciembre'];
-	const dashboardTabs = new Set(['perfil', 'cargar', 'evidencias', 'graficos', 'edicion']);
+	const dashboardTabs = new Set(['perfil', 'cargar', 'evidencias', 'graficos', 'edicion', 'preauditorias']);
+	const preauditTab = document.querySelector('#preauditoriasTab');
+	if (preauditTab && isAdmin) preauditTab.textContent = 'Preauditorías pendientes';
 	const savedTabKey = 'sidii_last_dashboard_tab';
 	let currentPeriod = window.SIDII.getCurrentPeriodIndex();
 	const menu = document.querySelector('#dashboardNav');
@@ -84,6 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 		if (tab === 'edicion') window.SIDII.renderGestionDatos(view);
 		if (tab === 'evidencias') window.SIDII.renderEvidencias(view);
 		if (tab === 'graficos') window.SIDII.renderGraficos(view);
+		if (tab === 'preauditorias') window.SIDII.renderPreauditorias(view);
 	}
 
 	menu.addEventListener('click', (event) => {
