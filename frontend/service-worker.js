@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'sidii-static-v14';
+const STATIC_CACHE = 'sidii-static-v17';
 const RUNTIME_CACHE = 'sidii-runtime-v1';
 const PAGE_CACHE = 'sidii-pages-v1';
 const CACHE_PREFIX = 'sidii-';
@@ -31,6 +31,7 @@ const PRECACHE_URLS = [
 	'./public/utp-1.jpg',
 	'./js/api-config.js',
 	'./js/auth.js',
+	'./js/semaforo.js',
 	'./js/login.js',
 	'./js/cargaDeDatos.js',
 	'./js/evidencias.js',
