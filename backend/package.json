@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "nodemon server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "vapid": "web-push generate-vapid-keys"
   },
   "keywords": [],
   "author": "",
@@ -19,9 +20,11 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.0",
     "multer": "^2.0.2",
+    "node-cron": "^3.0.3",
     "pdf-lib": "^1.17.1",
     "pdf-merger-js": "^5.1.2",
-    "pdfkit": "^0.17.2"
+    "pdfkit": "^0.17.2",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

@@ -8,6 +8,9 @@ const authRoutes = require('./routes/auth.routes');
 const subtiposRoutes = require('./routes/subtipos');
 const periodosRoutes = require('./routes/periodosRoutes')
 const chatRoutes = require('./routes/chat.routes');
+const alertasRoutes = require('./routes/alertas.routes');
+const pushRoutes = require('./routes/push.routes');
+const { iniciarTareasDeAlertas } = require('./jobs/alertas.job');
 const cacheControl = require('./middleware/cache-control');
 
 if (!process.env.JWT_SECRET) {
@@ -48,6 +51,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/subtipos', subtiposRoutes);
 app.use('/api/periods', periodosRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/alertas', alertasRoutes);
+app.use('/api/push', pushRoutes);
 
 // Error 404 para rutas no encontradas
 app.use((req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));
@@ -58,6 +63,7 @@ connectDB()
   .then(() => {
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`Servidor corriendo en puerto ${PORT} :)`);
+      iniciarTareasDeAlertas();
     });
   })
   .catch((error) => {

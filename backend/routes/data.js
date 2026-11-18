@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Data = require('../models/Data');
 const { protect } = require('../middleware/authMiddleware'); // Middleware para validar token
+const { disparadores: alertas } = require('../services/alertas.service');
 
 // Ruta para guardar datos
 router.post('/guardar', protect, async (req, res) => {
@@ -31,6 +32,7 @@ router.post('/guardar', protect, async (req, res) => {
     });
 
     await nuevoDato.save();
+    alertas.datoGuardado(nuevoDato);
     res.status(201).json({ message: 'Datos guardados correctamente' });
   } catch (error) {
     if (offlineOperationId && error.code === 11000) {
@@ -86,6 +88,7 @@ router.put('/:id', protect, async (req, res) => {
             req.body,
             { new: true }
         );
+        if (actualizado) alertas.datoActualizado(actualizado, req.user);
         res.json(actualizado);
     } catch (error) {
         console.error(error);
@@ -101,6 +104,7 @@ router.delete('/:id', protect, async (req, res) => {
     if (!resultado) {
       return res.status(404).json({ mensaje: 'Registro no encontrado' });
     }
+    alertas.datoEliminado(resultado, req.user);
 
     res.json({ mensaje: 'Registro eliminado' });
   } catch (error) {
