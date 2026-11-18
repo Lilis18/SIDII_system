@@ -112,3 +112,74 @@
 	body.printing-charts .chart-section:not(.print-selected) { display: none !important; }
 	body.printing-charts .charts-grid { display: block; }
 }
+
+/* ===== Semáforo inteligente de indicadores ===== */
+.sem-badge { display: inline-block; padding: 2px 9px; border-radius: 999px; background: var(--sem, #71717a); color: var(--sem-tinta, #fff); font-size: 11px; font-weight: 700; line-height: 1.5; white-space: nowrap; }
+.period-table.period-table { min-width: 640px; }
+.sem-cell { white-space: nowrap; }
+.sem-resumen { display: flex; flex: 1; flex-wrap: wrap; align-content: center; gap: 8px; margin: 0; }
+.sem-filtro { min-width: 104px; display: grid; gap: 2px; padding: 8px 12px; border: 1px solid var(--color-borde); border-top: 4px solid var(--sem, var(--color-guinda)); border-radius: 4px; background: #fff; color: var(--color-tinta); text-align: center; cursor: pointer; }
+.sem-filtro strong { font-size: 20px; line-height: 1.1; }
+.sem-filtro span { color: #555; font-size: 11px; font-weight: 650; }
+.sem-filtro:hover { background: #e8e8e8; }
+.sem-filtro.is-selected { background: var(--color-guinda); color: #fff; }
+.sem-filtro.is-selected span { color: #e4e4e7; }
+.sem-filtro:focus-visible { outline: 3px solid rgba(80, 80, 80, .35); outline-offset: 2px; }
+.sem-ayuda { margin: 0 0 14px; color: #666; font-size: 12px; }
+
+/* --- Anillo, barras y vista previa --- */
+.sem-anillo { --tam: 56px; position: relative; width: var(--tam); height: var(--tam); flex: none; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(var(--sem) calc(var(--pct) * 1%), #e4e4e7 0); }
+.sem-anillo::before { content: ""; position: absolute; inset: 7px; border-radius: 50%; background: #fff; }
+.sem-anillo span { position: relative; color: var(--color-tinta); font-size: 11px; font-weight: 800; }
+.sem-anillo.grande { --tam: 84px; }
+.sem-anillo.grande::before { inset: 10px; }
+.sem-anillo.grande span { font-size: 16px; }
+.sem-barra { height: 6px; margin: 5px 0 3px; overflow: hidden; border-radius: 999px; background: #e4e4e7; }
+.sem-barra i { display: block; width: calc(var(--pct) * 1%); height: 100%; border-radius: 999px; background: var(--sem); }
+.sem-vista { margin: 0; }
+.sem-vista-in { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border: 1px solid var(--color-borde); border-left: 5px solid var(--sem); border-radius: 4px; background: #fff; }
+.sem-vista-in strong { display: block; margin: 2px 0; font-size: 20px; }
+.sem-vista-in p { margin: 0; color: #555; font-size: 13px; }
+
+/* --- Gestión de datos --- */
+.sem-tablero { display: flex; flex-wrap: wrap; align-items: stretch; gap: 14px; margin: 0 0 10px; }
+.sem-general { min-width: 280px; display: flex; align-items: center; gap: 14px; padding: 12px 18px; border: 1px solid var(--color-borde); border-left: 5px solid var(--color-guinda); border-radius: 4px; background: #fff; }
+.sem-general strong { display: block; margin: 2px 0; font-size: 20px; }
+.sem-general p { margin: 0; color: #555; font-size: 12px; }
+.sem-herramientas { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+.sem-herramientas label { display: grid; gap: 5px; color: #444; font-size: 12px; font-weight: 700; }
+.sem-herramientas select { min-height: 36px; padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; background: #fff; font-size: 13px; }
+.sem-vivo { display: inline-flex; align-items: center; gap: 8px; color: #555; font-size: 12px; }
+.sem-vivo i { width: 9px; height: 9px; border-radius: 50%; background: #16a34a; animation: sem-pulso 2s infinite; }
+.sem-vivo.sin-conexion i { background: #9ca3af; animation: none; }
+.sem-fila td:first-child { box-shadow: inset 5px 0 0 var(--sem); }
+.sem-periodos { min-width: 200px; margin: 0; padding: 0; display: grid; gap: 10px; list-style: none; }
+.sem-periodo-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sem-periodo small { color: #666; font-size: 11px; }
+.sem-sin-meta { color: #71717a; font-size: 11px; }
+.sem-celda { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.sem-flash { animation: sem-destello 1.2s ease-out; }
+@keyframes sem-pulso { 0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, .5); } 70% { box-shadow: 0 0 0 7px rgba(22, 163, 74, 0); } 100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); } }
+@keyframes sem-destello { from { background: #fef9c3; } to { background: transparent; } }
+@media (prefers-reduced-motion: reduce) { .sem-vivo i, .sem-flash { animation: none; } }
+
+/* --- Base de evaluación --- */
+.sem-faltan { display: block; margin-top: 3px; color: #666; font-size: 11px; }
+.sem-anual { display: flex; align-items: center; gap: 12px; }
+.sem-anual small { display: block; margin-top: 4px; color: #666; font-size: 11px; }
+
+/* --- Semáforo en el Visualizador --- */
+.sem-panel { margin: 0 0 20px; padding: 18px; display: grid; gap: 12px; border: 1px solid var(--color-borde); border-left: 5px solid var(--color-guinda); background: #fff; }
+.sem-panel .sem-ayuda { margin: 0; }
+.sem-cuenta { cursor: default; }
+.sem-cuenta:hover { background: #fff; }
+.sem-subtitulo { margin: 6px 0 0; font-size: 14px; }
+.sem-subtitulo small { color: #666; font-weight: 400; font-size: 12px; }
+.sem-atencion { margin: 0; padding: 0; display: grid; gap: 8px; list-style: none; }
+.sem-atencion li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; border: 1px solid var(--color-borde); border-left: 5px solid var(--sem); border-radius: 4px; }
+.sem-atencion small { display: block; margin-top: 2px; color: #666; font-size: 11px; }
+.sem-atencion .sem-sin-atencion { display: block; border-left-color: #2e7d32; color: #2e7d32; font-weight: 650; }
+.bar-line .sem-badge { margin-top: 2px; }
+.chart-section .bar.planned, .chart-section .legend-planned { background: #a1a1aa; }
+.chart-section .legend-completed { background: linear-gradient(135deg, #c62828 33%, #f9a825 33% 66%, #2e7d32 66%); }
+.sem-atencion li strong { font-size: 13px; }
