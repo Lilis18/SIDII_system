@@ -170,11 +170,18 @@
 		return '';
 	}
 
-	function barraSemaforo(metadata) {
-		if (typeof metadata?.porcentaje !== 'number') return '';
-		const ancho = Math.max(2, Math.min(100, metadata.porcentaje));
-		return `<div class="alerta-progreso" role="img" aria-label="Cumplimiento ${escapeHTML(metadata.porcentaje)} por ciento">
-			<span style="width:${ancho}%"></span><strong>${escapeHTML(metadata.porcentaje)} %</strong>
+	// Mismo semáforo y mismos componentes visuales que Cargar datos y Gestión de datos (js/semaforo.js, css/dashboard.css).
+	function semaforoDe(metadata) {
+		if (!window.Semaforo || typeof metadata?.programado !== 'number' || typeof metadata?.realizado !== 'number') return null;
+		return window.Semaforo.calcular(metadata.realizado, metadata.programado);
+	}
+
+	function barraSemaforo(sem) {
+		if (!sem || sem.porcentaje === null) return '';
+		const relleno = Math.max(0, Math.min(100, sem.porcentaje));
+		return `<div class="alerta-semaforo">
+			<span class="sem-badge" style="--sem:${escapeHTML(sem.hex)};--sem-tinta:${escapeHTML(sem.tinta)}" title="${escapeHTML(sem.texto)}">${escapeHTML(sem.nombre)} · ${escapeHTML(sem.porcentaje)} %</span>
+			<div class="sem-barra" style="--sem:${escapeHTML(sem.hex)};--pct:${relleno}" role="img" aria-label="Cumplimiento ${escapeHTML(sem.porcentaje)} por ciento, ${escapeHTML(sem.nombre)}"><i></i></div>
 		</div>`;
 	}
 
@@ -186,7 +193,9 @@
 			alerta.prorrogaHasta && alerta.estado === 'prorroga' ? `Prórroga hasta ${new Date(alerta.prorrogaHasta).toLocaleDateString('es-MX')}` : '',
 			alerta.pospuestaHasta && alerta.estado === 'pospuesta' ? `Se recordará ${haceCuanto(alerta.pospuestaHasta)}` : '',
 		].filter(Boolean).map((texto) => `<span>${escapeHTML(texto)}</span>`).join('');
-		return `<article class="alerta-card severidad-${escapeHTML(alerta.severidad)} ${alerta.leida ? '' : 'no-leida'} ${estado.resaltar === alerta.id ? 'resaltada' : ''}" id="alerta-${escapeHTML(alerta.id)}" data-alerta-id="${escapeHTML(alerta.id)}">
+		const sem = semaforoDe(alerta.metadata);
+		const colorSemaforo = sem && sem.porcentaje !== null ? ` style="--alerta-color:${escapeHTML(sem.hex)}"` : '';
+		return `<article class="alerta-card severidad-${escapeHTML(alerta.severidad)} ${alerta.leida ? '' : 'no-leida'} ${estado.resaltar === alerta.id ? 'resaltada' : ''}"${colorSemaforo} id="alerta-${escapeHTML(alerta.id)}" data-alerta-id="${escapeHTML(alerta.id)}">
 			<header class="alerta-card-header">
 				<span class="alerta-chip">${escapeHTML(alerta.etiqueta)}</span>
 				<span class="alerta-estado">${escapeHTML(ETIQUETAS_ESTADO[alerta.estado] || alerta.estado)}</span>
@@ -194,7 +203,7 @@
 			</header>
 			<h3>${escapeHTML(alerta.titulo)}</h3>
 			<p>${escapeHTML(alerta.mensaje)}</p>
-			${barraSemaforo(alerta.metadata)}
+			${barraSemaforo(sem)}
 			${extra ? `<p class="alerta-meta">${extra}</p>` : ''}
 			${historial.length ? `<details class="alerta-historial"><summary>Historial (${historial.length})</summary><ul>${historial.map((item) => `<li>${escapeHTML(ETIQUETAS_ACCION[item.accion] || item.accion)}${item.via === 'push' ? ' · desde la notificación' : ''} · ${escapeHTML(new Date(item.fecha).toLocaleString('es-MX'))}${item.comentario ? ` · “${escapeHTML(item.comentario)}”` : ''}</li>`).join('')}</ul></details>` : ''}
 			<div class="alerta-acciones">${acciones}${alerta.leida ? '' : '<button type="button" class="button button-quiet button-small" data-alerta-leida>Marcar como leída</button>'}</div>

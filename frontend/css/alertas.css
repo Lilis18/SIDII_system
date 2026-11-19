@@ -1,10 +1,11 @@
 /* Alertas de SIDII: pestaña, bandeja y semáforo */
 :root {
-	--alerta-critica: #dc2626;
-	--alerta-alta: #d97706;
-	--alerta-media: #7c3aed;
-	--alerta-info: #52525b;
-	--alerta-ok: #16a34a;
+	/* Mismos colores que el semáforo inteligente (js/semaforo.js) */
+	--alerta-critica: #c62828;
+	--alerta-alta: #ef6c00;
+	--alerta-media: #1565c0;
+	--alerta-info: #71717a;
+	--alerta-ok: #2e7d32;
 }
 
 .alertas-badge {
@@ -82,9 +83,8 @@
 .alerta-card p { margin: 0; color: #444; font-size: 14px; line-height: 1.45; }
 .alerta-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px !important; color: #666 !important; font-size: 12px !important; }
 
-.alerta-progreso { position: relative; height: 18px; margin-top: 10px; border-radius: 3px; background: #ececec; overflow: hidden; }
-.alerta-progreso span { position: absolute; inset: 0 auto 0 0; background: var(--alerta-color); opacity: .85; }
-.alerta-progreso strong { position: relative; display: block; padding-right: 8px; color: #222; font-size: 11px; line-height: 18px; text-align: right; }
+.alerta-semaforo { margin-top: 10px; }
+.alerta-semaforo .sem-barra { height: 8px; margin-top: 6px; }
 
 .alerta-historial { margin-top: 10px; color: #555; font-size: 12px; }
 .alerta-historial summary { cursor: pointer; font-weight: 650; }
