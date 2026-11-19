@@ -100,13 +100,30 @@
 				const pdf = await PDFDocument.create();
 				const font = await pdf.embedFont(StandardFonts.Helvetica);
 				const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-				let page = pdf.addPage([595.28, 841.89]);
-				let y = 800;
+				const pageWidth = 595.28;
+				const pageHeight = 841.89;
 				const margin = 48;
 				const lineHeight = 15;
+				const letterheadResponse = await fetch('public/Membrete_UTP.jpg');
+				if (!letterheadResponse.ok) throw new Error('No se pudo cargar el membrete institucional.');
+				const letterhead = await pdf.embedJpg(await letterheadResponse.arrayBuffer());
+				let page;
+				let y;
 
+				function startEvidencePage() {
+					page = pdf.addPage([pageWidth, pageHeight]);
+					page.drawImage(letterhead, { x: margin, y: pageHeight - 69, width: 260, height: 40 });
+					page.drawText('Clave y nombre del PP', { x: 320, y: pageHeight - 42, size: 7.5, font: bold, color: rgb(0.18, 0.18, 0.18) });
+					page.drawText(`${formValue('clavePP')} ${formValue('nombrePP')}`.trim(), { x: 320, y: pageHeight - 54, size: 7.5, font, color: rgb(0.18, 0.18, 0.18), maxWidth: 225 });
+					page.drawText('Unidad responsable', { x: 320, y: pageHeight - 66, size: 7.5, font: bold, color: rgb(0.18, 0.18, 0.18) });
+					page.drawText(`${formValue('unidad')} ${formValue('universidad')}`.trim(), { x: 320, y: pageHeight - 78, size: 7.5, font, color: rgb(0.18, 0.18, 0.18), maxWidth: 225 });
+					page.drawLine({ start: { x: margin, y: pageHeight - 91 }, end: { x: pageWidth - margin, y: pageHeight - 91 }, thickness: 0.8, color: rgb(0.72, 0.68, 0.69) });
+					y = pageHeight - 120;
+				}
+
+				startEvidencePage();
 				function addPageIfNeeded(height = lineHeight) {
-					if (y - height < 45) { page = pdf.addPage([595.28, 841.89]); y = 800; }
+					if (y - height < 45) startEvidencePage();
 				}
 				function drawLine(text, options = {}) {
 					const fontSize = options.size || 10;
@@ -127,7 +144,6 @@
 					y -= options.gap || lineHeight;
 				}
 
-				drawLine('UNIVERSIDAD TECNOLÓGICA DE PUEBLA', { size: 15, bold: true, gap: 22 });
 				drawLine('CAPTURA DE EVIDENCIAS', { size: 13, bold: true, gap: 24 });
 				drawLine(`Clave y nombre del PP: ${formValue('clavePP')} ${formValue('nombrePP')}`);
 				drawLine(`Unidad responsable: ${formValue('unidad')} ${formValue('universidad')}`);
@@ -160,15 +176,42 @@
 					pages.forEach((attachedPage) => pdf.addPage(attachedPage));
 				}
 				const bytes = await pdf.save();
+				const evidenceBlob = new Blob([bytes], { type: 'application/pdf' });
 				if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-				pdfUrl = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+				pdfUrl = URL.createObjectURL(evidenceBlob);
 				const preview = container.querySelector('#evidencePreview');
 				preview.hidden = false;
 				preview.querySelector('iframe').src = pdfUrl;
 				const download = container.querySelector('#downloadEvidencePdf');
 				download.href = pdfUrl;
 				download.click();
-				window.SIDII.showMessage(message, 'PDF generado y descargado.', 'success');
+				window.SIDII.showMessage(message, 'PDF generado y descargado. Iniciando preauditoría...', 'success');
+
+				// Integración aditiva: el PDF original se sigue generando/descargando; el auditor recibe una copia Blob.
+				window.dispatchEvent(new CustomEvent('sidii:evidencia-generada', {
+					detail: {
+						documento: evidenceBlob,
+						datosActividad: {
+							clavePP: formValue('clavePP'),
+							nombrePP: formValue('nombrePP'),
+							unidad: `${formValue('unidad')} ${formValue('universidad')}`.trim(),
+							tituloActividad: formValue('tituloActividad'),
+							metas: {
+								programadas: Object.fromEntries(['eneAbr','mayAgo','sepDic','total','porcentaje'].map((key) => [key, formValue(`prog-${key}`)])),
+								alcanzadas: Object.fromEntries(['eneAbr','mayAgo','sepDic','total','porcentaje'].map((key) => [key, formValue(`alc-${key}`)])),
+							},
+						justificacion: formValue('justificacion'),
+						descripcion: formValue('descripcion'),
+						evidencias: formValue('evidencias').split('\n').map((item) => item.trim()).filter(Boolean),
+						titular: { nombre: formValue('titularNombre'), puesto: formValue('titularPuesto'), firmaAdjunta: Boolean(imageData.titular) },
+						enlace: { nombre: formValue('enlaceNombre'), puesto: formValue('enlacePuesto'), firmaAdjunta: Boolean(imageData.enlace) },
+						documentosAdjuntos: Array.from(filesInput.files || []).map((file) => ({ nombre: file.name, tamanioBytes: file.size, mimeType: file.type })),
+						fechaGeneracion: new Date().toISOString(),
+					},
+					firmaTitularDataUrl: imageData.titular,
+					firmaEnlaceDataUrl: imageData.enlace,
+				},
+				}));
 			} catch (error) {
 				console.error('Error al generar el PDF:', error);
 				window.SIDII.showMessage(message, 'No se pudo generar el PDF. Revisa que los archivos adjuntos sean PDF válidos.');

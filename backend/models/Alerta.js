@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const TIPOS_ALERTA = [
   'SEMAFORO_ROJO',
-  'SEMAFORO_AMARILLO',
+  'SEMAFORO_NARANJA',
   'SOBRECUMPLIMIENTO',
   'DATO_INCONSISTENTE',
   'PERIODO_POR_CERRAR',

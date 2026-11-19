@@ -3,17 +3,9 @@
 const NOMBRES_PERIODO = ['Enero - Abril', 'Mayo - Agosto', 'Septiembre - Diciembre'];
 const ZONA_HORARIA = 'America/Mexico_City';
 
-const numeroEnv = (nombre, porDefecto) => {
-  const valor = Number(process.env[nombre]);
-  return Number.isFinite(valor) && valor > 0 ? valor : porDefecto;
-};
-
-// Umbrales en porcentaje de cumplimiento (realizado / programado).
-const UMBRALES = Object.freeze({
-  rojo: numeroEnv('SEMAFORO_UMBRAL_ROJO', 70),          // < 70 %  → rojo
-  verde: numeroEnv('SEMAFORO_UMBRAL_VERDE', 90),        // 70–89 % → amarillo, ≥ 90 % → verde
-  sobrecumplimiento: numeroEnv('SEMAFORO_UMBRAL_SOBRE', 120), // > 120 % → posible error de captura
-});
+// Los niveles y rangos los define el semáforo inteligente del equipo (utils/semaforo.js),
+// el mismo que usan Cargar datos, Gestión de datos y el tablero. Aquí solo se decide qué niveles generan alerta.
+const Semaforo = require('../utils/semaforo');
 
 function fechaEnMexico(fecha = new Date()) {
   const partes = Object.fromEntries(new Intl.DateTimeFormat('en-US', {
@@ -55,24 +47,18 @@ function numero(valor) {
   return Number.isFinite(n) ? n : 0;
 }
 
+// Igual que Semaforo.calcular, pero distingue "sin meta" de "hay avance sin meta" (dato inconsistente).
 function calcularSemaforo(programado, realizado) {
-  const prog = numero(programado);
-  const real = numero(realizado);
-  if (prog <= 0) {
-    return { color: real > 0 ? 'inconsistente' : 'sin_meta', porcentaje: null };
-  }
-  const porcentaje = Math.round((real / prog) * 1000) / 10;
-  let color = 'verde';
-  if (porcentaje < UMBRALES.rojo) color = 'rojo';
-  else if (porcentaje < UMBRALES.verde) color = 'amarillo';
-  else if (porcentaje > UMBRALES.sobrecumplimiento) color = 'sobrecumplimiento';
-  return { color, porcentaje };
+  const resultado = Semaforo.calcular(numero(realizado), numero(programado));
+  if (resultado.clave === 'sin_meta' && numero(realizado) > 0) return { ...resultado, clave: 'inconsistente', nombre: 'Inconsistente' };
+  return resultado;
 }
 
-const TIPO_POR_COLOR = {
-  rojo: 'SEMAFORO_ROJO',
-  amarillo: 'SEMAFORO_AMARILLO',
-  sobrecumplimiento: 'SOBRECUMPLIMIENTO',
+// Niveles del semáforo que generan alerta.
+const TIPO_POR_CLAVE = {
+  insuficiente: 'SEMAFORO_ROJO',
+  moderado: 'SEMAFORO_NARANJA',
+  excedido: 'SOBRECUMPLIMIENTO',
   inconsistente: 'DATO_INCONSISTENTE',
 };
 
@@ -92,17 +78,18 @@ function evaluarRegistro(registro, fecha = new Date()) {
     const evaluable = realizado > 0 || periodoIndex < actual;
     if (programado > 0 && !evaluable) return;
 
-    const { color, porcentaje } = calcularSemaforo(programado, realizado);
-    const tipo = TIPO_POR_COLOR[color];
+    const nivel = calcularSemaforo(programado, realizado);
+    const tipo = TIPO_POR_CLAVE[nivel.clave];
     if (!tipo) return;
     hallazgos.push({
       tipo,
-      color,
+      nivel: nivel.nombre,
+      texto: nivel.texto,
       periodoIndex,
       periodoNombre: NOMBRES_PERIODO[periodoIndex] || periodo?.nombre || `Periodo ${posicion + 1}`,
       programado,
       realizado,
-      porcentaje,
+      porcentaje: nivel.porcentaje,
     });
   });
   return hallazgos;
@@ -110,8 +97,7 @@ function evaluarRegistro(registro, fecha = new Date()) {
 
 module.exports = {
   NOMBRES_PERIODO,
-  UMBRALES,
-  TIPOS_SEMAFORO: Object.values(TIPO_POR_COLOR),
+  TIPOS_SEMAFORO: Object.values(TIPO_POR_CLAVE),
   calcularSemaforo,
   evaluarRegistro,
   periodoActual,

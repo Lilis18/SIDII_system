@@ -42,8 +42,8 @@ const CATALOGO = {
     severidad: 'critica', etiqueta: 'Semáforo rojo',
     rector: ['aprobar_prorroga', 'solicitar_revision'], responsable: ['corregir', 'solicitar_prorroga'], otros: ['ver'],
   },
-  SEMAFORO_AMARILLO: {
-    severidad: 'alta', etiqueta: 'Semáforo amarillo',
+  SEMAFORO_NARANJA: {
+    severidad: 'alta', etiqueta: 'Semáforo naranja',
     responsable: ['ver', 'posponer'], otros: ['ver', 'posponer'],
   },
   SOBRECUMPLIMIENTO: {
@@ -295,20 +295,17 @@ function textoSemaforo(hallazgo, registro, responsableNombre) {
     ? `realizado ${hallazgo.realizado} sin meta programada`
     : `${hallazgo.realizado} de ${hallazgo.programado} (${hallazgo.porcentaje} %)`;
   const titulos = {
-    SEMAFORO_ROJO: '🔴 Indicador en semáforo rojo',
-    SEMAFORO_AMARILLO: '🟡 Indicador en semáforo amarillo',
-    SOBRECUMPLIMIENTO: '🟣 Posible sobrecaptura',
+    SEMAFORO_ROJO: '🔴 Indicador en semáforo rojo (Insuficiente)',
+    SEMAFORO_NARANJA: '🟠 Indicador en semáforo naranja (Moderado)',
+    SOBRECUMPLIMIENTO: '🔵 Indicador excedido',
     DATO_INCONSISTENTE: '⚠️ Dato inconsistente',
   };
   const notas = {
-    SEMAFORO_ROJO: `Cumplimiento por debajo del ${semaforo.UMBRALES.rojo} %.`,
-    SEMAFORO_AMARILLO: `Cumplimiento por debajo del ${semaforo.UMBRALES.verde} %.`,
-    SOBRECUMPLIMIENTO: `Supera el ${semaforo.UMBRALES.sobrecumplimiento} % de la meta; confirma que no sea un error de captura.`,
     DATO_INCONSISTENTE: 'Hay avance realizado, pero la meta programada es 0.',
   };
   return {
     titulo: titulos[hallazgo.tipo],
-    mensaje: `${descripcion} · ${hallazgo.periodoNombre}: ${avance}. ${notas[hallazgo.tipo]} Responsable: ${responsableNombre}.`,
+    mensaje: `${descripcion} · ${hallazgo.periodoNombre}: ${avance}. ${notas[hallazgo.tipo] || hallazgo.texto} Responsable: ${responsableNombre}.`,
   };
 }
 
@@ -344,7 +341,7 @@ async function evaluarDato(registro, { fecha = new Date(), cacheRoles } = {}) {
   for (const hallazgo of hallazgos) {
     let destinatarios = [responsable];
     if (hallazgo.tipo === 'SEMAFORO_ROJO') destinatarios = [...roles.superAdmins, responsable];
-    if (hallazgo.tipo === 'SEMAFORO_AMARILLO') destinatarios = [responsable, ...roles.admins];
+    if (hallazgo.tipo === 'SEMAFORO_NARANJA') destinatarios = [responsable, ...roles.admins];
     const { titulo, mensaje } = textoSemaforo(hallazgo, registro, responsableNombre);
     await crearAlerta({
       tipo: hallazgo.tipo,
@@ -364,6 +361,7 @@ async function evaluarDato(registro, { fecha = new Date(), cacheRoles } = {}) {
         programado: hallazgo.programado,
         realizado: hallazgo.realizado,
         porcentaje: hallazgo.porcentaje,
+        nivel: hallazgo.nivel,
         responsableNombre,
       },
     });

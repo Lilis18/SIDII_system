@@ -3,6 +3,7 @@ const router = express.Router();
 const Data = require('../models/Data');
 const { protect } = require('../middleware/authMiddleware'); // Middleware para validar token
 const { disparadores: alertas } = require('../services/alertas.service');
+const { evaluarRegistro, conSemaforo, resumirSemaforo } = require('../utils/semaforo'); // Semáforo inteligente
 
 // Ruta para guardar datos
 router.post('/guardar', protect, async (req, res) => {
@@ -33,7 +34,8 @@ router.post('/guardar', protect, async (req, res) => {
 
     await nuevoDato.save();
     alertas.datoGuardado(nuevoDato);
-    res.status(201).json({ message: 'Datos guardados correctamente' });
+    // Se responde con el semáforo del indicador recién guardado (por periodo y global)
+    res.status(201).json({ message: 'Datos guardados correctamente', semaforo: evaluarRegistro(nuevoDato.toObject()) });
   } catch (error) {
     if (offlineOperationId && error.code === 11000) {
       const alreadySaved = await Data.findOne({
@@ -61,8 +63,10 @@ router.get('/', protect, async (req, res) => {
     if (actividad) query.actividad = actividad;
 
     try {
-        const data = await Data.find(query);
-        res.json(data);
+        // Cada registro trae su semáforo (por periodo y global). Filtro opcional: /api/data?nivel=insuficiente
+        const data = (await Data.find(query).lean()).map(conSemaforo);
+        const nivel = String(req.query.nivel || '').trim();
+        res.json(nivel ? data.filter((registro) => registro.semaforo.global.clave === nivel) : data);
     } catch (error) {
         res.status(500).json({ msg: 'Error al obtener los datos' });
     }
@@ -133,5 +137,16 @@ router.get('/subtipos/:tipo', protect, async (req, res) => {
   }
 });
 
+
+// Semáforo: cuántos indicadores hay en cada nivel y cuáles requieren atención (rojo y naranja, del menor al mayor cumplimiento)
+router.get('/semaforo/resumen', protect, async (req, res) => {
+  try {
+    const registros = (await Data.find().lean()).map(conSemaforo);
+    res.json(resumirSemaforo(registros));
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error al calcular el semáforo' });
+  }
+});
 
 module.exports = router;

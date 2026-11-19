@@ -11,6 +11,7 @@ const chatRoutes = require('./routes/chat.routes');
 const alertasRoutes = require('./routes/alertas.routes');
 const pushRoutes = require('./routes/push.routes');
 const { iniciarTareasDeAlertas } = require('./jobs/alertas.job');
+const auditoriasRoutes = require('./routes/auditorias.routes');
 const cacheControl = require('./middleware/cache-control');
 
 if (!process.env.JWT_SECRET) {
@@ -33,6 +34,10 @@ const configuredOrigins = (process.env.FRONTEND_URL || '')
   .filter(Boolean);
 const allowedOrigins = new Set([
   'https://sistema-integral-de-indicadores-zxuf.onrender.com',
+  'http://localhost',
+  'http://127.0.0.1',
+  'http://localhost:8081',
+  'http://127.0.0.1:8081',
   ...configuredOrigins,
 ].map(normalizeOrigin).filter(Boolean));
 
@@ -53,6 +58,7 @@ app.use('/api/periods', periodosRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/alertas', alertasRoutes);
 app.use('/api/push', pushRoutes);
+app.use('/api/auditorias', auditoriasRoutes);
 
 // Error 404 para rutas no encontradas
 app.use((req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));

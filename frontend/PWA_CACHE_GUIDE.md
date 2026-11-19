@@ -6,7 +6,7 @@ Una PWA usa un service worker, un script que el navegador ejecuta aparte de la p
 
 SIDII separa el contenido estático de los recursos encontrados durante la navegación:
 
-- `sidii-static-v14`: shell y recursos conocidos, precargados durante la instalación.
+- `sidii-static-v18`: shell y recursos conocidos, precargados durante la instalación.
 - `sidii-pages-v1`: páginas HTML visitadas, guardadas para poder recargarlas sin red.
 - `sidii-runtime-v1`: recursos locales que no estaban en la precarga y se descargan durante el uso.
 - `sidii-api-v1-<hash>`: respuestas JSON GET autenticadas, separadas por token de sesión.
@@ -46,7 +46,7 @@ Las altas desde **Cargar datos** que fallen por falta de red se guardan en Index
 
 1. Despliega el frontend actualizado en Render y ábrelo por su URL HTTPS. Evita `file://`; el service worker no funciona desde archivos locales.
 2. Abre DevTools con `F12` y recarga la página. En **Application > Service Workers**, comprueba que `service-worker.js` figura como **activated** y que la página está controlada por él.
-3. En **Application > Cache Storage**, abre `sidii-static-v14`. Deben aparecer `login.html`, `dashboard.html`, `offline.html`, `js/assistant.js`, `css/assistant.css` y otros recursos precargados. `sidii-pages-v1` contendrá las páginas visitadas.
+3. En **Application > Cache Storage**, abre `sidii-static-v18`. Deben aparecer `login.html`, `dashboard.html`, `offline.html`, `js/assistant.js`, `css/assistant.css` y otros recursos precargados. `sidii-pages-v1` contendrá las páginas visitadas.
 4. Comprueba el caché runtime. Entra al panel, abre **Cargar evidencias** y deja que aparezca el membrete `public/Membrete_UTP.jpg`. Ese archivo no está en la precarga; al cargarse como imagen debe aparecer en `sidii-runtime-v1`.
 5. Con sesión iniciada y después de visitar **Visualizador de gráficas**, selecciona **Network > Offline** y recarga `dashboard.html`. Debe mostrarse el dashboard desde `sidii-pages-v1`, restaurar la pestaña de gráficas y pintar los datos desde `sidii-api-v1-...`; las imágenes se sirven desde las cachés estática/runtime. Una página no visitada ni precargada caerá en `offline.html`.
 6. Con sesión iniciada, carga datos para que una respuesta real de `GET /api/data` llegue con `200`. En **Network > Headers > Response Headers** verás `Cache-Control: no-store, private`; en **Application > Cache Storage** debe aparecer una caché `sidii-api-v1-...` con esa ruta. El worker guarda explícitamente la respuesta JSON pese a ese encabezado HTTP.
@@ -56,12 +56,16 @@ Las altas desde **Cargar datos** que fallen por falta de red se guardan en Index
 10. Inicia sesión y abre el asistente. En **Network**, filtra por `chat`: `GET /api/chat/history` debe responder `200`; al enviar una pregunta deben aparecer dos `POST /api/chat/save`, con `rol: "usuario"` y `rol: "bot"`, ambos con respuesta `201`. Recarga y confirma que el historial vuelve a pintarse. No compartas capturas que muestren el valor de `Authorization`.
 11. En el dashboard, permite notificaciones cuando el navegador lo solicite. Pregunta por el periodo vigente para comprobar el aviso del asistente y selecciona **Network > Offline** para comprobar el aviso de desconexión. El navegador debe tener concedido el permiso.
 
+Al servir el frontend localmente con XAMPP, el origen suele ser `http://localhost` o `http://127.0.0.1` (sin el puerto `8081`). El backend debe permitir esos orígenes en CORS; el backend del repositorio ya incluye ambos y los puertos `8081` habituales para desarrollo. Después de desplegar un cambio del backend, reinicia/actualiza el servicio para que la configuración tome efecto.
+
+Si una página desplegada sigue solicitando `127.0.0.1:5000`, probablemente conserva recursos de una versión anterior del service worker. Despliega el nuevo `service-worker.js`, abre **Application > Service Workers**, selecciona **Update** o **Unregister**, limpia **Cache Storage** y recarga. Verifica que `window.SIDII_API_BASE` apunte al backend de Render y que exista `sidii-static-v18`.
+
 También puedes inspeccionar los registros desde **Console**:
 
 ```js
 navigator.serviceWorker.controller?.scriptURL
 caches.keys()
-caches.open('sidii-static-v14').then(cache => cache.keys()).then(requests => requests.map(request => new URL(request.url).pathname))
+caches.open('sidii-static-v18').then(cache => cache.keys()).then(requests => requests.map(request => new URL(request.url).pathname))
 caches.open('sidii-runtime-v1').then(cache => cache.keys()).then(requests => requests.map(request => new URL(request.url).pathname))
 caches.keys().then(names => names.filter(name => name.startsWith('sidii-api-v1-')))
 ```
@@ -89,3 +93,12 @@ Si el worker no se instala, revisa **Console** y **Network** por un `404` dentro
 ## Límites actuales
 
 SIDII guarda la interfaz y respuestas exitosas de lectura API autenticadas para ofrecer consulta offline. El inicio de sesión, la escritura de datos y la actualización de la API requieren conexión. El worker no sincroniza automáticamente operaciones pendientes.
+
+## Preauditorías y consulta offline
+
+El Service Worker `sidii-static-v18` precarga `js/auditorias.js` y `css/auditorias.css`. La pantalla de preauditorías guarda una instantánea de los registros pendientes en Cache Storage con el nombre `sidii-preauditorias-v2-<id-de-usuario>`. Las colecciones locales se mantienen separadas por cuenta y el Service Worker conserva estos almacenes durante las actualizaciones. En modo offline la consulta es de solo lectura; el registro de correcciones, el análisis con Groq y la consolidación en MongoDB requieren conexión.
+
+
+## Revisión del contenido y de las imágenes de firma
+
+La preauditoría envía a Groq el texto que se pudo recuperar del PDF. El informe registra cuántas páginas se abrieron y cuántos caracteres se recuperaron y se enviaron; cuando el texto excede el límite configurado, se indica que la revisión fue parcial. Los PDF sin texto seleccionable no se presentan como analizados: requieren una etapa de OCR antes de generar una preauditoría. Las imágenes de las firmas se envían por separado al modelo visual configurado en `GROQ_VISION_MODEL`, se revisan en memoria y no se guardan en MongoDB. La revisión visual solo describe si la imagen parece contener un trazo de firma o si tiene problemas de legibilidad; no autentica la firma ni identifica a la persona que la realizó.

@@ -8,9 +8,9 @@ Sistema de alertas con **notificaciones Web Push** y **botones de acción nativo
 
 | Alerta | Cuándo se genera | Quién la recibe | Botones |
 |---|---|---|---|
-| 🔴 **Semáforo rojo** | Cumplimiento < 70 % | Rector · Responsable | Rector: **Aprobar prórroga · Solicitar revisión**. Responsable: Corregir dato · Pedir prórroga |
-| 🟡 **Semáforo amarillo** | Cumplimiento de 70 a 89 % | Responsable · ADMIN | Ver detalle · Recordar mañana |
-| 🟣 **Sobrecumplimiento** | Más del 120 % (posible error de captura) | Responsable | El dato es correcto · Corregir dato |
+| 🔴 **Semáforo rojo** (Insuficiente) | Cumplimiento < 70 % | Rector · Responsable | Rector: **Aprobar prórroga · Solicitar revisión**. Responsable: Corregir dato · Pedir prórroga |
+| 🟠 **Semáforo naranja** (Moderado) | Cumplimiento de 70 a 79 % | Responsable · ADMIN | Ver detalle · Recordar mañana |
+| 🔵 **Excedido** | Más del 110 % (revisar si la meta se programó muy baja) | Responsable | El dato es correcto · Corregir dato |
 | ⚠️ **Dato inconsistente** | Realizado > 0 con programado = 0 | Responsable | Corregir dato · El dato es correcto |
 | ⏰ **Periodo por cerrar** | 7 y 2 días antes de que termine el cuatrimestre, si hay meta sin avance | Responsable | Capturar ahora · Pedir prórroga |
 | 📨 **Prórroga solicitada** | El responsable pidió una prórroga | Rector | Aprobar prórroga · Rechazar |
@@ -22,7 +22,7 @@ Sistema de alertas con **notificaciones Web Push** y **botones de acción nativo
 | 🚩 **Cambio no reconocido** | El responsable reporta un cambio | Rector | Ver detalle · Marcar atendida |
 | 🔄 **Sincronización fallida** | Capturas offline sin enviar con SIDII en segundo plano (notificación local) | El mismo usuario | Reintentar ahora |
 
-**Cómo se evalúa el semáforo:** se usa `realizado / programado` de cada cuatrimestre. Un cuatrimestre se evalúa cuando ya tiene realizado capturado o cuando ya terminó; un cuatrimestre pasado con realizado 0 queda en rojo.
+**Cómo se evalúa el semáforo:** las alertas usan el **semáforo inteligente del equipo** (`backend/utils/semaforo.js`, el mismo que muestra la pantalla). Generan alerta los niveles Insuficiente, Moderado y Excedido; Adecuado (80–89 %) y Aceptable (90–110 %) no. Si se cambian los rangos en ese archivo, las alertas se ajustan solas. Se evalúa `realizado / programado` de cada cuatrimestre. Un cuatrimestre se evalúa cuando ya tiene realizado capturado o cuando ya terminó; un cuatrimestre pasado con realizado 0 queda en rojo.
 
 **Comportamiento automático:**
 - **Sin duplicados:** solo hay una alerta activa por indicador, periodo y tipo.
@@ -56,7 +56,7 @@ Cron diario 8:00 (jobs/) ─────────┘         └─► servic
 |---|---|
 | `backend/models/Alerta.js` | Modelo de alerta: estado, historial y deduplicación |
 | `backend/models/PushSubscription.js` | Dispositivos suscritos por usuario |
-| `backend/services/semaforo.service.js` | Cálculo del semáforo y fechas de cuatrimestre (funciones puras) |
+| `backend/services/semaforo.service.js` | Qué niveles del semáforo del equipo generan alerta, y fechas de cuatrimestre |
 | `backend/services/alertas.service.js` | Catálogo, motor, acciones y disparadores |
 | `backend/services/push.service.js` | Envío Web Push (VAPID) y limpieza de suscripciones vencidas |
 | `backend/services/alertaToken.service.js` | Tokens de acción de un solo uso |
@@ -88,7 +88,6 @@ Cron diario 8:00 (jobs/) ─────────┘         └─► servic
    ```
    Si faltan las llaves, las alertas se siguen guardando y se ven en la pestaña, pero no se envían como push.
 2. Opcionales, con su valor por defecto:
-   - `SEMAFORO_UMBRAL_ROJO=70`, `SEMAFORO_UMBRAL_VERDE=90`, `SEMAFORO_UMBRAL_SOBRE=120`
    - `ALERTA_DIAS_PRORROGA=15`, `ALERTA_HORAS_POSPONER=24`, `ALERTA_DIAS_AVISO_CIERRE=7,2`
    - `ALERTAS_CRON_DIARIO=0 8 * * *` (hora de México), `ALERTAS_CRON=off` para desactivar el cron
 3. Cada usuario entra en **Alertas → Activar notificaciones** en cada dispositivo y puede usar **Enviar prueba**.

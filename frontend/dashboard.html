@@ -10,6 +10,7 @@
 	<link rel="stylesheet" href="css/global.css">
 	<link rel="stylesheet" href="css/dashboard.css">
 	<link rel="stylesheet" href="css/evidenvias.css">
+	<link rel="stylesheet" href="css/auditorias.css">
 	<link rel="stylesheet" href="css/alertas.css">
 	<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js" defer></script>
 </head>
@@ -30,6 +31,7 @@
 			<button type="button" class="nav-tab" data-tab="evidencias">Cargar evidencias</button>
 			<button type="button" class="nav-tab" data-tab="graficos">Visualizador de gráficas</button>
 			<button type="button" class="nav-tab" data-tab="edicion">Gestión de datos</button>
+			<button type="button" class="nav-tab" data-tab="preauditorias" id="preauditoriasTab">Mis preauditorías</button>
 			<button type="button" class="nav-tab" data-tab="alertas">Alertas <span class="alertas-badge" id="alertasBadge" hidden>0</span></button>
 		</nav>
 		<section class="dashboard-content">
@@ -38,13 +40,16 @@
 			<div class="dashboard-view" id="view-evidencias" data-view="evidencias"></div>
 			<div class="dashboard-view" id="view-graficos" data-view="graficos"></div>
 			<div class="dashboard-view" id="view-edicion" data-view="edicion"></div>
+			<div class="dashboard-view" id="view-preauditorias" data-view="preauditorias"></div>
 			<div class="dashboard-view" id="view-alertas" data-view="alertas"></div>
 		</section>
 	</main>
 	<script src="js/api-config.js"></script>
+	<script src="js/semaforo.js"></script>
 	<script src="js/auth.js"></script>
 	<script src="js/cargaDeDatos.js"></script>
 	<script src="js/evidencias.js"></script>
+	<script src="js/auditorias.js"></script>
 	<script src="js/grafico.js"></script>
 	<script src="js/dasboard.js"></script>
 	<script src="js/footer.js"></script>
