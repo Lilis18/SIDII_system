@@ -1,0 +1,104 @@
+/* Alertas de SIDII: pestaña, bandeja y semáforo */
+:root {
+	--alerta-critica: #dc2626;
+	--alerta-alta: #d97706;
+	--alerta-media: #7c3aed;
+	--alerta-info: #52525b;
+	--alerta-ok: #16a34a;
+}
+
+.alertas-badge {
+	min-width: 20px;
+	height: 20px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-left: 6px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--alerta-info);
+	color: #fff;
+	font-size: 11px;
+	font-weight: 800;
+	line-height: 1;
+	vertical-align: middle;
+}
+.alertas-badge[data-critica="true"] { background: var(--alerta-critica); }
+
+.alertas-push {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	max-width: 940px;
+	margin-bottom: 20px;
+	padding: 14px 16px;
+	border: 1px solid var(--color-borde);
+	border-left: 4px solid var(--alerta-info);
+	background: #fff;
+}
+.alertas-push p { margin: 4px 0 0; color: #555; font-size: 13px; }
+.alertas-push[data-estado="activo"] { border-left-color: var(--alerta-ok); }
+.alertas-push[data-estado="bloqueado"], .alertas-push[data-estado="no-soportado"] { border-left-color: var(--alerta-alta); }
+.alertas-push:empty { display: none; }
+
+.alertas-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 10px;
+	max-width: 940px;
+	margin-bottom: 14px;
+}
+.alertas-filtros { display: inline-flex; border: 1px solid var(--color-borde); border-radius: 4px; overflow: hidden; background: #fff; }
+.alertas-filtros button { min-height: 34px; padding: 6px 14px; border: 0; background: transparent; color: #444; font-size: 13px; font-weight: 650; cursor: pointer; }
+.alertas-filtros button + button { border-left: 1px solid var(--color-borde); }
+.alertas-filtros button[aria-selected="true"] { background: var(--color-guinda); color: #fff; }
+
+.alertas-lista { display: grid; gap: 12px; max-width: 940px; }
+.alertas-vacio { margin: 0; padding: 28px 16px; border: 1px dashed var(--color-borde); color: #666; text-align: center; background: #fff; }
+
+.alerta-card {
+	--alerta-color: var(--alerta-info);
+	padding: 14px 16px;
+	border: 1px solid var(--color-borde);
+	border-left: 5px solid var(--alerta-color);
+	background: #fff;
+	scroll-margin-top: 80px;
+}
+.alerta-card.severidad-critica { --alerta-color: var(--alerta-critica); }
+.alerta-card.severidad-alta { --alerta-color: var(--alerta-alta); }
+.alerta-card.severidad-media { --alerta-color: var(--alerta-media); }
+.alerta-card.no-leida { box-shadow: 0 1px 0 var(--alerta-color) inset; }
+.alerta-card.no-leida h3::after { content: ""; width: 8px; height: 8px; display: inline-block; margin-left: 8px; border-radius: 50%; background: var(--alerta-color); vertical-align: middle; }
+.alerta-card.resaltada { outline: 3px solid var(--alerta-color); outline-offset: 2px; }
+
+.alerta-card-header { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: #666; font-size: 12px; }
+.alerta-chip { padding: 2px 8px; border-radius: 999px; background: var(--alerta-color); color: #fff; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+.alerta-estado { padding: 2px 8px; border: 1px solid var(--color-borde); border-radius: 999px; color: #444; font-weight: 650; }
+.alerta-card-header time { margin-left: auto; }
+.alerta-card h3 { margin: 10px 0 4px; color: #222; font-size: 16px; }
+.alerta-card p { margin: 0; color: #444; font-size: 14px; line-height: 1.45; }
+.alerta-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px !important; color: #666 !important; font-size: 12px !important; }
+
+.alerta-progreso { position: relative; height: 18px; margin-top: 10px; border-radius: 3px; background: #ececec; overflow: hidden; }
+.alerta-progreso span { position: absolute; inset: 0 auto 0 0; background: var(--alerta-color); opacity: .85; }
+.alerta-progreso strong { position: relative; display: block; padding-right: 8px; color: #222; font-size: 11px; line-height: 18px; text-align: right; }
+
+.alerta-historial { margin-top: 10px; color: #555; font-size: 12px; }
+.alerta-historial summary { cursor: pointer; font-weight: 650; }
+.alerta-historial ul { margin: 6px 0 0; padding-left: 18px; }
+
+.alerta-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.alerta-acciones:empty { display: none; }
+
+@media (max-width: 760px) {
+	.alertas-push { align-items: flex-start; flex-direction: column; }
+	.alerta-card-header time { width: 100%; margin-left: 0; }
+	.alerta-acciones .button { flex: 1 1 auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.alerta-card { scroll-behavior: auto; }
+}

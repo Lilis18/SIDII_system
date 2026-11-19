@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'sidii-static-v14';
+const STATIC_CACHE = 'sidii-static-v15';
 const RUNTIME_CACHE = 'sidii-runtime-v1';
 const PAGE_CACHE = 'sidii-pages-v1';
 const CACHE_PREFIX = 'sidii-';
@@ -28,6 +28,7 @@ const PRECACHE_URLS = [
 	'./css/dashboard.css',
 	'./css/evidenvias.css',
 	'./css/assistant.css',
+	'./css/alertas.css',
 	'./public/utp-1.jpg',
 	'./js/api-config.js',
 	'./js/auth.js',
@@ -39,6 +40,7 @@ const PRECACHE_URLS = [
 	'./js/footer.js',
 	'./js/pwa.js',
 	'./js/assistant.js',
+	'./js/alertas.js',
 	'./public/icon-192.png',
 	'./public/icon-512.png',
 ];
@@ -219,4 +221,210 @@ self.addEventListener('fetch', (event) => {
             })()
         );
     }
+});
+
+// ---------------------------------------------------------------------------
+// Alertas push: notificaciones con botones de acción que se ejecutan en segundo plano.
+// ---------------------------------------------------------------------------
+const ALERT_API_BASE = `${API_ORIGIN || self.location.origin}/api`;
+const ALERT_DB_NAME = 'sidii-alertas-sw';
+const ALERT_STORE = 'acciones-pendientes';
+const ALERT_SYNC_TAG = 'sidii-acciones-alertas';
+const ALERT_ICON = new URL('./public/icon-192.png', self.registration.scope).href;
+
+function abrirBaseAlertas() {
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open(ALERT_DB_NAME, 1);
+		request.onupgradeneeded = () => request.result.createObjectStore(ALERT_STORE, { keyPath: 'id' });
+		request.onsuccess = () => resolve(request.result);
+		request.onerror = () => reject(request.error);
+	});
+}
+
+async function operarAccionesPendientes(modo, operacion) {
+	const db = await abrirBaseAlertas();
+	try {
+		return await new Promise((resolve, reject) => {
+			const tx = db.transaction(ALERT_STORE, modo);
+			const solicitud = operacion(tx.objectStore(ALERT_STORE));
+			tx.oncomplete = () => resolve(solicitud?.result);
+			tx.onerror = () => reject(tx.error);
+		});
+	} finally {
+		db.close();
+	}
+}
+
+async function avisarAClientes(mensaje) {
+	const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+	clientes.forEach((cliente) => cliente.postMessage(mensaje));
+}
+
+function mostrarAvisoAlerta(titulo, cuerpo, tag) {
+	return self.registration.showNotification(titulo, {
+		body: cuerpo,
+		icon: ALERT_ICON,
+		badge: ALERT_ICON,
+		tag: tag || 'sidii-alerta-respuesta',
+		data: { url: './dashboard.html#alertas' },
+	});
+}
+
+self.addEventListener('push', (event) => {
+	let datos = {};
+	try {
+		datos = event.data ? event.data.json() : {};
+	} catch {
+		datos = { titulo: 'SIDII', mensaje: event.data ? event.data.text() : 'Tienes una nueva alerta.' };
+	}
+	const titulo = datos.titulo || 'SIDII';
+	const maxAcciones = self.Notification?.maxActions ?? 2;
+	const opciones = {
+		body: datos.mensaje || 'Tienes una nueva alerta en SIDII.',
+		icon: ALERT_ICON,
+		badge: ALERT_ICON,
+		tag: datos.tag || `sidii-alerta-${Date.now()}`,
+		renotify: true,
+		requireInteraction: Boolean(datos.requireInteraction),
+		timestamp: datos.timestamp || Date.now(),
+		vibrate: datos.severidad === 'critica' ? [200, 100, 200, 100, 200] : [150],
+		actions: (datos.actions || []).slice(0, maxAcciones),
+		data: {
+			alertaId: datos.alertaId,
+			url: datos.url || './dashboard.html#alertas',
+			acciones: datos.acciones || {},
+			token: datos.token,
+		},
+	};
+	event.waitUntil(Promise.all([
+		self.registration.showNotification(titulo, opciones),
+		avisarAClientes({ type: 'SIDII_ALERTA_RECIBIDA', alertaId: datos.alertaId }),
+	]));
+});
+
+async function abrirSIDII(url) {
+	const destino = new URL(url || './dashboard.html#alertas', self.registration.scope).href;
+	const clientes = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+	const existente = clientes.find((cliente) => new URL(cliente.url).origin === self.location.origin);
+	if (existente) {
+		await existente.focus();
+		if ('navigate' in existente) return existente.navigate(destino);
+		return existente;
+	}
+	return self.clients.openWindow(destino);
+}
+
+async function enviarAccionAlerta(alertaId, accion, token) {
+	const response = await fetch(`${ALERT_API_BASE}/alertas/${encodeURIComponent(alertaId)}/accion-push`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ accion, token }),
+	});
+	const cuerpo = await response.json().catch(() => ({}));
+	return { ok: response.ok, status: response.status, msg: cuerpo.msg };
+}
+
+async function guardarAccionPendiente(alertaId, accion, token) {
+	await operarAccionesPendientes('readwrite', (store) => store.put({
+		id: `${alertaId}:${accion}`,
+		alertaId,
+		accion,
+		token,
+		creada: Date.now(),
+	}));
+	if (self.registration.sync) {
+		try {
+			await self.registration.sync.register(ALERT_SYNC_TAG);
+		} catch {
+			// Sin Background Sync: la página enviará la cola al abrirse (mensaje SIDII_ENVIAR_ACCIONES).
+		}
+	}
+}
+
+async function ejecutarAccionDesdeNotificacion(datos, accion) {
+	const tag = `sidii-alerta-${datos.alertaId}`;
+	let resultado;
+	try {
+		resultado = await enviarAccionAlerta(datos.alertaId, accion, datos.token);
+	} catch {
+		resultado = null; // Sin conexión.
+	}
+	if (!resultado || resultado.status >= 500) {
+		await guardarAccionPendiente(datos.alertaId, accion, datos.token);
+		await mostrarAvisoAlerta('SIDII · sin conexión', 'Tu respuesta se guardó y se enviará en cuanto haya conexión.', tag);
+		return;
+	}
+	// 401/403/409: token vencido, ya usado o alerta atendida por otra persona.
+	await mostrarAvisoAlerta(
+		resultado.ok ? 'SIDII ✓' : 'SIDII',
+		resultado.msg || (resultado.ok ? 'Acción registrada.' : 'No se pudo completar la acción. Abre SIDII para revisarla.'),
+		tag,
+	);
+	await avisarAClientes({ type: 'SIDII_ALERTA_ACTUALIZADA', alertaId: datos.alertaId });
+}
+
+async function enviarAccionesPendientes() {
+	const pendientes = await operarAccionesPendientes('readonly', (store) => store.getAll()) || [];
+	for (const pendiente of pendientes) {
+		// Si sigue sin red, fetch lanza y Background Sync reintentará más tarde.
+		const resultado = await enviarAccionAlerta(pendiente.alertaId, pendiente.accion, pendiente.token);
+		if (resultado.status >= 500) throw new Error('Servidor no disponible');
+		await operarAccionesPendientes('readwrite', (store) => store.delete(pendiente.id));
+		await mostrarAvisoAlerta(
+			resultado.ok ? 'SIDII ✓' : 'SIDII',
+			resultado.msg || (resultado.ok ? 'Acción registrada.' : 'No se pudo completar la acción pendiente.'),
+			`sidii-alerta-${pendiente.alertaId}`,
+		);
+		await avisarAClientes({ type: 'SIDII_ALERTA_ACTUALIZADA', alertaId: pendiente.alertaId });
+	}
+}
+
+self.addEventListener('notificationclick', (event) => {
+	const notificacion = event.notification;
+	const datos = notificacion.data || {};
+	const accion = event.action;
+	notificacion.close();
+
+	// Notificación local de sincronización offline (la crea js/alertas.js).
+	if (datos.tipo === 'SINCRONIZACION_FALLIDA') {
+		event.waitUntil(accion === 'reintentar'
+			? avisarAClientes({ type: 'SIDII_REINTENTAR_SYNC' }).then(() => abrirSIDII('./dashboard.html'))
+			: abrirSIDII('./dashboard.html'));
+		return;
+	}
+
+	const definicion = accion ? datos.acciones?.[accion] : null;
+	if (accion && definicion?.modo === 'servidor' && datos.alertaId && datos.token) {
+		event.waitUntil(ejecutarAccionDesdeNotificacion(datos, accion));
+		return;
+	}
+	const vista = definicion?.vista && definicion.vista !== 'alertas' ? definicion.vista : null;
+	const url = vista ? `./dashboard.html#tab=${vista}` : (datos.url || './dashboard.html#alertas');
+	event.waitUntil(abrirSIDII(url));
+});
+
+self.addEventListener('sync', (event) => {
+	if (event.tag === ALERT_SYNC_TAG) event.waitUntil(enviarAccionesPendientes());
+});
+
+self.addEventListener('message', (event) => {
+	if (event.data?.type === 'SIDII_ENVIAR_ACCIONES') {
+		event.waitUntil(enviarAccionesPendientes().catch(() => {}));
+	}
+});
+
+// El navegador renovó la suscripción: se informa al backend con el endpoint anterior.
+self.addEventListener('pushsubscriptionchange', (event) => {
+	event.waitUntil((async () => {
+		const anterior = event.oldSubscription;
+		const nueva = event.newSubscription || (anterior?.options
+			? await self.registration.pushManager.subscribe(anterior.options)
+			: null);
+		if (!anterior?.endpoint || !nueva) return;
+		await fetch(`${ALERT_API_BASE}/push/renovar`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ oldEndpoint: anterior.endpoint, subscription: nueva.toJSON() }),
+		});
+	})());
 });
