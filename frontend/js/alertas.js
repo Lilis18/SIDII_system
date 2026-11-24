@@ -80,6 +80,29 @@
 		return 'inactivo';
 	}
 
+	/**
+	 * Crea la suscripción push. Si el navegador responde "push service error" (por ejemplo, porque quedó
+	 * una suscripción vieja de llaves anteriores), la borra y lo intenta una vez más antes de avisar.
+	 */
+	async function crearSuscripcion(registro, publicKey) {
+		const opciones = { userVisibleOnly: true, applicationServerKey: base64UrlAUint8(publicKey) };
+		try {
+			return await registro.pushManager.subscribe(opciones);
+		} catch (error) {
+			const esErrorDelServicio = error?.name === 'AbortError' || /push service/i.test(error?.message || '');
+			if (!esErrorDelServicio) throw error;
+			const vieja = await registro.pushManager.getSubscription();
+			if (vieja) await vieja.unsubscribe().catch(() => {});
+			await new Promise((resolve) => { window.setTimeout(resolve, 1000); });
+			try {
+				return await registro.pushManager.subscribe(opciones);
+			} catch (segundoError) {
+				console.warn('No se pudo crear la suscripción push:', segundoError);
+				throw new Error('Tu navegador no pudo registrarse en su servicio de notificaciones. Borra los datos de este sitio (F12 → Application → Clear site data) y vuelve a intentarlo. Si usas Brave, activa "Usar servicios de Google para mensajes push"; si no, prueba con otro navegador o con otra red.');
+			}
+		}
+	}
+
 	async function suscribir({ pedirPermiso = false } = {}) {
 		if (!pushSoportado) throw new Error('Este navegador no admite notificaciones push. En iPhone, instala SIDII en la pantalla de inicio (iOS 16.4 o superior).');
 		if (Notification.permission === 'default' && pedirPermiso) await Notification.requestPermission();
@@ -102,10 +125,7 @@
 			suscripcion = null;
 		}
 		if (!suscripcion) {
-			suscripcion = await registro.pushManager.subscribe({
-				userVisibleOnly: true,
-				applicationServerKey: base64UrlAUint8(publicKey),
-			});
+			suscripcion = await crearSuscripcion(registro, publicKey);
 		}
 		await api('/push/subscribe', { method: 'POST', body: JSON.stringify({ subscription: suscripcion.toJSON() }) });
 		estado.endpointActual = suscripcion.endpoint;

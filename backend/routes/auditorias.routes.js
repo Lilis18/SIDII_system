@@ -20,6 +20,17 @@ const upload = multer({
   },
 });
 const adminRoles = ['SUPER_ADMIN', 'ADMIN'];
+// Cada preauditoría consume tokens de Groq; se limita cuántas puede generar cada usuario por día.
+const MAX_PREAUDITORIAS_DIARIAS = Number(process.env.PREAUDITORIA_MAX_DIARIAS) > 0 ? Number(process.env.PREAUDITORIA_MAX_DIARIAS) : 20;
+
+async function preauditoriasDeHoy(usuarioId) {
+  const desde = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [pendientes, finales] = await Promise.all([
+    Preauditoria.countDocuments({ usuario: usuarioId, createdAt: { $gte: desde } }),
+    AuditoriaFinal.countDocuments({ usuario: usuarioId, createdAt: { $gte: desde } }),
+  ]);
+  return pendientes + finales;
+}
 const adminOnly = requireRole(...adminRoles);
 
 function handlePdfUpload(req, res, next) {
@@ -200,6 +211,9 @@ function buildFinalText(preaudit, review, outcome) {
 router.post('/preauditorias', protect, handlePdfUpload, async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ msg: 'No se recibió el PDF de evidencias.' });
+    if (await preauditoriasDeHoy(req.user.id) >= MAX_PREAUDITORIAS_DIARIAS) {
+      return res.status(429).json({ msg: `Alcanzaste el máximo de ${MAX_PREAUDITORIAS_DIARIAS} preauditorías en 24 horas. Inténtalo más tarde.` });
+    }
     if (!req.file.buffer.subarray(0, 5).equals(Buffer.from('%PDF-'))) {
       return res.status(400).json({ msg: 'El archivo recibido no tiene una cabecera PDF válida.' });
     }

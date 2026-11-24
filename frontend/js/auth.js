@@ -17,8 +17,13 @@
     try {
       response = await fetch(`${apiBase}${path}`, { ...options, headers });
     } catch (error) {
-      if (queueOffline && options.method?.toUpperCase() === 'POST' && path === '/data/guardar') {
-        return queueOfflineWrite(path, options.body);
+      // Sin conexión: las capturas, ediciones y eliminaciones de registros se guardan en el dispositivo
+      // y se envían solas al recuperar la conexión.
+      const method = String(options.method || 'GET').toUpperCase();
+      const offlineWrite = (method === 'POST' && path === '/data/guardar')
+        || ((method === 'PUT' || method === 'DELETE') && /^\/data\/[A-Za-z0-9]+$/.test(path));
+      if (queueOffline && offlineWrite) {
+        return queueOfflineWrite(path, options.body, method);
       }
       throw error;
     }
@@ -130,7 +135,7 @@
     });
   }
 
-  async function queueOfflineWrite(path, body) {
+  async function queueOfflineWrite(path, body, method = 'POST') {
     const owner = normalizeEmail(localStorage.getItem('email'));
     if (!localStorage.getItem('token') || !owner) {
       throw new Error('Inicia sesión antes de guardar datos sin conexión.');
@@ -139,6 +144,7 @@
     const operation = {
       id: window.crypto.randomUUID(),
       owner,
+      method,
       path,
       body,
       createdAt: Date.now(),
@@ -188,15 +194,23 @@
     try {
       const pending = await getPendingWrites(owner);
       for (const operation of pending) {
+        const method = operation.method || 'POST';
         try {
           await api(operation.path, {
-            method: 'POST',
-            headers: { 'X-SIDII-Operation-Id': operation.id },
-            body: operation.body,
+            method,
+            headers: method === 'POST' ? { 'X-SIDII-Operation-Id': operation.id } : {},
+            ...(operation.body ? { body: operation.body } : {}),
           }, { queueOffline: false });
           await removePendingWrite(operation.id);
           synchronized += 1;
         } catch (error) {
+          // Una edición o eliminación que ya no se puede aplicar (el registro ya no existe o no es tuyo)
+          // se descarta para no bloquear el resto de la cola.
+          if (method !== 'POST' && [400, 403, 404, 409].includes(error.status)) {
+            console.warn('Se descartó un cambio offline que ya no se puede aplicar.', error);
+            await removePendingWrite(operation.id);
+            continue;
+          }
           authRequired = error.status === 401 || error.status === 403;
           console.warn('Hay cambios pendientes de sincronización.', error);
           break;
@@ -422,6 +436,7 @@
     authenticateOffline,
     rememberOfflineLogin,
     syncOfflineQueue,
+    pendingWrites: () => getPendingWrites(normalizeEmail(localStorage.getItem('email'))).catch(() => []),
   };
   if (navigator.onLine) void syncOfflineQueue();
 })();

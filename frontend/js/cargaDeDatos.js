@@ -237,17 +237,36 @@
 					: `<li class="sem-periodo"><div class="sem-periodo-top"><strong>${escapeHTML(e.etiqueta)}</strong>${badge(e.sem)}</div>${barra(e.sem)}<small>Programado ${escapeHTML(e.programado)} · Realizado ${escapeHTML(e.realizado)}</small></li>`)).join('')
 					+ (lista.length ? '' : '<li class="sem-sin-meta">Sin meta programada en ningún periodo</li>')
 					+ (lista.length && vacios.length ? `<li class="sem-sin-meta">Sin captura: ${escapeHTML(vacios.join(', '))}</li>` : '');
-				return `<tr class="sem-fila" style="--sem:${acento}"><td data-label="Tipo">${escapeHTML(record.tipo)}</td><td data-label="Subtipo">${escapeHTML(record.subtipo || '-')}</td><td data-label="Resumen">${escapeHTML(record.resumen)}</td><td data-label="Indicador">${escapeHTML(record.indicador)}</td><td data-label="Evaluación"><ul class="sem-periodos">${items}</ul></td><td class="table-actions"><button type="button" class="button button-small" data-edit="${escapeHTML(record._id)}">Editar</button><button type="button" class="button button-danger button-small" data-remove="${escapeHTML(record._id)}">Eliminar</button></td></tr>`;
+				return `<tr class="sem-fila" style="--sem:${acento}"><td data-label="Tipo">${escapeHTML(record.tipo)}</td><td data-label="Subtipo">${escapeHTML(record.subtipo || '-')}</td><td data-label="Resumen">${escapeHTML(record.resumen)}</td><td data-label="Indicador">${escapeHTML(record.indicador)}</td><td data-label="Evaluación"><ul class="sem-periodos">${items}</ul></td><td class="table-actions">${record.pendiente ? '<span class="sem-pendiente" title="Se enviará al servidor al recuperar la conexión">Pendiente de sincronizar</span>' : ''}${String(record._id).startsWith('pendiente-') ? '' : `<button type="button" class="button button-small" data-edit="${escapeHTML(record._id)}">Editar</button><button type="button" class="button button-danger button-small" data-remove="${escapeHTML(record._id)}">Eliminar</button>`}</td></tr>`;
 			}).join('') || (filtro ? '<tr><td colspan="6">No hay indicadores en este nivel.</td></tr>' : '<tr><td colspan="6">No hay registros.</td></tr>');
+		}
+
+		// Cambios hechos sin conexión que todavía no llegan al servidor: se muestran encima de los datos guardados.
+		async function aplicarPendientes(lista) {
+			const pendientes = await (window.SIDII.pendingWrites?.() || Promise.resolve([]));
+			let resultado = [...lista];
+			for (const op of pendientes) {
+				const cuerpo = op.body ? JSON.parse(op.body) : {};
+				const id = op.path.split('/').pop();
+				if ((op.method || 'POST') === 'POST') {
+					resultado.push({ ...cuerpo, _id: `pendiente-${op.id}`, pendiente: true });
+				} else if (op.method === 'PUT') {
+					resultado = resultado.map((record) => (record._id === id ? { ...record, ...cuerpo, pendiente: true } : record));
+				} else if (op.method === 'DELETE') {
+					resultado = resultado.filter((record) => record._id !== id);
+				}
+			}
+			return resultado;
 		}
 
 		async function loadRecords({ silencioso = false } = {}) {
 			try {
-				const result = await window.SIDII.api('/data');
+				const respuesta = await window.SIDII.api('/data');
+				const result = await aplicarPendientes(Array.isArray(respuesta) ? respuesta : []);
 				const nueva = JSON.stringify(result);
 				const cambio = nueva !== huella;
 				huella = nueva;
-				records = Array.isArray(result) ? result : [];
+				records = result;
 				marcarVivo(true);
 				if (silencioso && !cambio) return;
 				if (silencioso) destello();
@@ -289,9 +308,11 @@
 					})),
 				};
 				try {
-					await window.SIDII.api(`/data/${encodeURIComponent(record._id)}`, { method: 'PUT', body: JSON.stringify(payload) });
+					const resultado = await window.SIDII.api(`/data/${encodeURIComponent(record._id)}`, { method: 'PUT', body: JSON.stringify(payload) });
 					editor.innerHTML = '';
-					window.SIDII.showMessage(message, 'Registro actualizado.', 'success');
+					window.SIDII.showMessage(message, resultado?.queuedOffline
+						? 'Sin conexión: el cambio se guardó en este dispositivo y se enviará al recuperar la conexión.'
+						: 'Registro actualizado.', 'success');
 					await loadRecords();
 				} catch (error) {
 					window.SIDII.showMessage(message, error.message || 'No se pudo actualizar el registro.');
@@ -307,8 +328,10 @@
 				if (record) showEditor(record);
 			} else if (deleteButton && window.confirm('¿Eliminar este registro?')) {
 				try {
-					await window.SIDII.api(`/data/${encodeURIComponent(deleteButton.dataset.remove)}`, { method: 'DELETE' });
-					window.SIDII.showMessage(message, 'Registro eliminado.', 'success');
+					const resultado = await window.SIDII.api(`/data/${encodeURIComponent(deleteButton.dataset.remove)}`, { method: 'DELETE' });
+					window.SIDII.showMessage(message, resultado?.queuedOffline
+						? 'Sin conexión: la eliminación se guardó en este dispositivo y se enviará al recuperar la conexión.'
+						: 'Registro eliminado.', 'success');
 					await loadRecords();
 				} catch (error) {
 					window.SIDII.showMessage(message, error.message || 'No se pudo eliminar el registro.');
