@@ -1,3 +1,5 @@
+const { disparadores: alertas } = require('../services/alertas.service');
+
 let forcedPeriods = [];
 
 const getCurrentPeriodIndex = (date = new Date()) => {
@@ -23,8 +25,10 @@ const togglePeriodo = (req, res) => {
     return res.status(400).json({ message: 'El periodo vigente se activa automáticamente.' });
   }
 
+  const cambio = habilitado !== forcedPeriods.includes(index);
   if (habilitado && !forcedPeriods.includes(index)) forcedPeriods.push(index);
   if (!habilitado && forcedPeriods.includes(index)) forcedPeriods = forcedPeriods.filter(i => i !== index);
+  if (cambio) alertas.periodoForzado({ index, habilitado }, req.user);
 
   const currentPeriod = getCurrentPeriodIndex();
   res.json({

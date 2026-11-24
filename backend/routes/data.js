@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Data = require('../models/Data');
 const { protect } = require('../middleware/authMiddleware'); // Middleware para validar token
+const { disparadores: alertas } = require('../services/alertas.service');
 const { evaluarRegistro, conSemaforo, resumirSemaforo } = require('../utils/semaforo'); // Semáforo inteligente
 
 // Ruta para guardar datos
@@ -32,6 +33,7 @@ router.post('/guardar', protect, async (req, res) => {
     });
 
     await nuevoDato.save();
+    alertas.datoGuardado(nuevoDato);
     // Se responde con el semáforo del indicador recién guardado (por periodo y global)
     res.status(201).json({ message: 'Datos guardados correctamente', semaforo: evaluarRegistro(nuevoDato.toObject()) });
   } catch (error) {
@@ -90,6 +92,7 @@ router.put('/:id', protect, async (req, res) => {
             req.body,
             { new: true }
         );
+        if (actualizado) alertas.datoActualizado(actualizado, req.user);
         res.json(actualizado);
     } catch (error) {
         console.error(error);
@@ -105,6 +108,7 @@ router.delete('/:id', protect, async (req, res) => {
     if (!resultado) {
       return res.status(404).json({ mensaje: 'Registro no encontrado' });
     }
+    alertas.datoEliminado(resultado, req.user);
 
     res.json({ mensaje: 'Registro eliminado' });
   } catch (error) {

@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const AppSettings = require("../models/AppSettings");
 const { protect } = require('../middleware/authMiddleware');
+const { disparadores: alertas } = require('../services/alertas.service');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -27,6 +28,7 @@ router.post('/register', async (req, res) => {
     // 🔹 Crear el usuario (el hash se hace en el pre('save'))
     const newUser = new User({ name, email, password, role });
     await newUser.save();
+    alertas.usuarioRegistrado(newUser);
 
     // 🔹 Si es SUPER_ADMIN, guardamos en AppSettings
     if (role === "SUPER_ADMIN") {
@@ -140,6 +142,7 @@ router.put("/users/:id/role", protect, onlySuperAdmin, async (req, res) => {
 
     user.role = role;
     await user.save();
+    alertas.rolCambiado(user);
     res.json({ msg: `Rol actualizado a ${role}`, user });
   } catch (error) {
     res.status(500).json({ msg: "Error al actualizar rol" });
