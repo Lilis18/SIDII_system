@@ -70,12 +70,15 @@ const TIPO_POR_CLAVE = {
  */
 function evaluarRegistro(registro, fecha = new Date()) {
   const actual = periodoActual(fecha);
+  const anioActual = fechaEnMexico(fecha).anio;
+  // Registros de años anteriores: todos sus cuatrimestres ya terminaron.
+  const anioRegistro = Number(registro?.anio) || anioActual;
   const hallazgos = [];
   (registro?.periodos || []).forEach((periodo, posicion) => {
     const periodoIndex = indicePeriodo(periodo, posicion);
     const programado = numero(periodo?.programado);
     const realizado = numero(periodo?.realizado);
-    const evaluable = realizado > 0 || periodoIndex < actual;
+    const evaluable = realizado > 0 || anioRegistro < anioActual || periodoIndex < actual;
     if (programado > 0 && !evaluable) return;
 
     const nivel = calcularSemaforo(programado, realizado);

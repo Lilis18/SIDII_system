@@ -39,6 +39,7 @@
 				<label class="file-picker">Documentos PDF adjuntos<input id="evidencePdfs" type="file" accept="application/pdf" multiple></label>
 				<p id="pdfFilesLabel" class="field-caption">Sin documentos seleccionados</p>
 				<p id="evidenceMessage" class="inline-message" role="status" hidden></p>
+				<p class="field-caption evidence-privacy-note">Al generar el PDF se inicia una preauditoría automática: el texto del documento y las imágenes de las firmas se envían a un servicio externo de inteligencia artificial (Groq) para su revisión. Las imágenes de las firmas no se guardan.</p>
 				<button class="button button-primary" type="button" id="buildEvidencePdf">Generar y unir PDF</button>
 			</form>
 			<section class="evidence-document" id="evidenceDocument" aria-label="Vista previa del documento"></section>

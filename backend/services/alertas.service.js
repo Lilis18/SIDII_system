@@ -381,7 +381,8 @@ async function avisarCierreDePeriodo(fecha = new Date()) {
   if (!DIAS_AVISO_CIERRE.includes(dias)) return 0;
 
   const nombrePeriodo = semaforo.NOMBRES_PERIODO[indice];
-  const cursor = Data.find({}).lean().cursor();
+  // Solo registros del año en curso (los anteriores al campo `anio` no lo tienen).
+  const cursor = Data.find({ $or: [{ anio }, { anio: { $exists: false } }] }).lean().cursor();
   let avisos = 0;
   for await (const registro of cursor) {
     const periodo = (registro.periodos || []).find((item, posicion) => (

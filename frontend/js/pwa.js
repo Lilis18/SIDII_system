@@ -92,17 +92,9 @@ window.mostrarNotificacion = (titulo, cuerpo) => {
 	}
 };
 
-function requestDashboardNotificationPermission() {
-	if (document.body?.dataset.page === 'dashboard') {
-		void solicitarPermisoNotificaciones();
-	}
-}
-
-if (document.readyState === 'loading') {
-	document.addEventListener('DOMContentLoaded', requestDashboardNotificationPermission, { once: true });
-} else {
-	requestDashboardNotificationPermission();
-}
+// El permiso de notificaciones ya no se pide al abrir el dashboard: los navegadores bloquean o silencian
+// las solicitudes que no provienen de una acción del usuario. Se pide desde Alertas → "Activar notificaciones".
+window.SIDII_solicitarPermisoNotificaciones = solicitarPermisoNotificaciones;
 
 let installPrompt;
 
