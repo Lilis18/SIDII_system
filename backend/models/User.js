@@ -12,6 +12,9 @@ const userSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
+// Solo puede existir un SUPER_ADMIN: evita que dos registros simultáneos con la base vacía creen dos.
+userSchema.index({ role: 1 }, { unique: true, partialFilterExpression: { role: 'SUPER_ADMIN' } });
+
 // Método para hashear la contraseña antes de guardar
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();

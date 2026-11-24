@@ -19,6 +19,8 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+// Render (y cualquier proxy) reenvía la IP real del cliente; necesario para el límite de intentos de inicio de sesión.
+app.set('trust proxy', 1);
 app.use(cacheControl);
 
 const normalizeOrigin = (value) => {
@@ -47,8 +49,9 @@ app.use(cors({
     return callback(new Error(`Origen no permitido por CORS: ${origin}`));
   },
 }));
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+// Los PDF de preauditoría llegan por multer (con su propio límite); el JSON de la API es pequeño.
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 // Rutas
 app.use('/api/data', dataRoutes);
@@ -61,7 +64,7 @@ app.use('/api/push', pushRoutes);
 app.use('/api/auditorias', auditoriasRoutes);
 
 // Error 404 para rutas no encontradas
-app.use((req, res) => res.status(404).json({ message: 'Ruta no encontrada' }));
+app.use((req, res) => res.status(404).json({ msg: 'Ruta no encontrada' }));
 
 const PORT = process.env.PORT || 5000;
 
