@@ -183,3 +183,4 @@
 .chart-section .bar.planned, .chart-section .legend-planned { background: #a1a1aa; }
 .chart-section .legend-completed { background: linear-gradient(135deg, #c62828 33%, #f9a825 33% 66%, #2e7d32 66%); }
 .sem-atencion li strong { font-size: 13px; }
+.sem-pendiente { display: inline-block; margin-bottom: 6px; padding: 2px 8px; border-radius: 999px; background: #fff4d6; color: #7a4f00; font-size: 11px; font-weight: 700; }
