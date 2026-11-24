@@ -1,0 +1,34 @@
+name: Revisión automática
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias del backend
+        working-directory: backend
+        run: npm ci
+
+      - name: Revisar sintaxis del backend
+        working-directory: backend
+        run: find . -name "*.js" -not -path "./node_modules/*" -print0 | xargs -0 -n1 node --check
+
+      - name: Revisar sintaxis del frontend
+        working-directory: frontend
+        run: find . -name "*.js" -not -path "./node_modules/*" -print0 | xargs -0 -n1 node --check
+
+      - name: Pruebas
+        working-directory: backend
+        run: npm test

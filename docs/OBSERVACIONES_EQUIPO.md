@@ -2,16 +2,44 @@
 
 Revisión completa del proyecto con la versión más reciente: `main` en `dfe2c8d` más la rama `erika/alertas`. Incluye el semáforo inteligente, las preauditorías y las alertas.
 
-Estos puntos están en módulos que no son parte de las alertas, así que **no los modifiqué**. Quedan como sugerencias para quien corresponda. Cada punto indica dónde está y qué se recomienda.
+Cada punto indica dónde está el problema y qué se recomienda. Las correcciones se aplicaron en la rama `erika/alertas` y están verificadas con pruebas automáticas (`npm test`) y pruebas de integración.
 
-| Prioridad | Cantidad | Tipo |
+## Estado de las correcciones
+
+| # | Observación | Estado |
 |---|---|---|
-| 🔴 Alta | 10 | Seguridad y errores que afectan el uso |
-| 🟠 Media | 8 | Datos y funcionamiento |
-| 🟡 Baja | 5 | Calidad de código |
-| ⚪ Organización | 2 | Documentación y pruebas |
+| 1 | Editar o borrar registros ajenos | ✅ Solo el dueño o un administrador; se guardan únicamente los campos permitidos |
+| 2 | `GET /api/data` devuelve todo | ✅ USER ve solo sus registros; ADMIN y SUPER_ADMIN ven todos. Filtros por `tipo` y `subtipo` |
+| 3 | Cambio de contraseña roto | ✅ Usa `req.user.id`; mínimo 8 caracteres |
+| 4 | SUPER_ADMIN sin protección | ✅ No se puede degradar ni eliminar, ni modificar la propia cuenta |
+| 5 | Usuarios eliminados dejan registros huérfanos | ✅ No se elimina un usuario con registros o preauditorías pendientes (responde 409) |
+| 6 | Sin límite de intentos de inicio de sesión | ✅ `express-rate-limit`: 10 intentos fallidos cada 15 min por IP |
+| 7 | Preauditorías sin límite | ✅ Máximo 20 por usuario cada 24 h (`PREAUDITORIA_MAX_DIARIAS`) |
+| 8 | JSON de 50 MB | ✅ Límite de 1 MB |
+| 9 | Registro público | ✅ Solo el primer usuario se registra libremente; después solo un administrador. Índice único de SUPER_ADMIN |
+| 10 | Errores internos en las respuestas | ✅ Eliminados. El inicio de sesión responde un mensaje genérico, sin revelar si el correo existe |
+| 11 | `Data` sin año ni fechas | ✅ `anio` y `timestamps` en registros nuevos. Las alertas consideran cerrados los periodos de años anteriores |
+| 12 | Periodos en memoria | ✅ Se guardan en `AppSettings.forcedPeriods` |
+| 13 | Semáforo duplicado | ✅ `npm test` falla si los dos archivos no son idénticos |
+| 14 | Subtipos | 🟡 Ruta `/api/subtipos` protegida. **Falta que el equipo decida** si los subtipos vienen de la base o del frontend |
+| 15 | Números sin validar | ✅ `min: 0` en el modelo y validación en la ruta |
+| 16 | Envío de datos a Groq | ✅ Aviso en la pantalla de evidencias |
+| 17 | Modelo de visión | ✅ Revisado: la guía del auditor indica que Groq documenta el modelo. Se agregaron las variables `GROQ_*` al `.env.example`, donde faltaban |
+| 18 | `pdf-parse` antiguo | ⏸ **Pendiente.** Cambiarlo requiere probar con PDFs reales de la universidad |
+| 19 | Ruta duplicada | ✅ Eliminada |
+| 20 | Código muerto | ✅ Eliminados `PUT /auth/periods` y `authController.js` |
+| 21 | Formato de respuestas | ✅ Errores con `{ msg }` en datos, autenticación, periodos y subtipos. Convención documentada en el README |
+| 22 | `console.log` de depuración | ✅ Eliminado |
+| 23 | Permiso de notificaciones automático | ✅ Se pide solo desde Alertas → Activar notificaciones |
+| 24 | Sin README | ✅ `README.md` con instalación, variables, despliegue, roles y convenciones |
+| 25 | Sin pruebas ni revisión automática | ✅ `npm test` (8 pruebas) y GitHub Actions (`.github/workflows/ci.yml`) en cada PR |
 
-Las más urgentes son la **1**, la **3** y la **4**.
+**Cambios de comportamiento que el equipo debe conocer:**
+- **Gestión de datos y gráficas:** un usuario con rol USER ahora ve solo sus propios registros.
+- **Registro de usuarios:** `register.html` solo funciona sin sesión mientras no existe ningún usuario. Después, solo lo puede usar un administrador con sesión, que es como ya lo usaba el panel.
+- **Contraseñas:** deben tener al menos 8 caracteres.
+
+El resto del documento conserva el detalle original de cada observación.
 
 ---
 
