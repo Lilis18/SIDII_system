@@ -107,6 +107,106 @@
 		return { ...answer, text: typeof answer.text === 'function' ? answer.text() : answer.text };
 	}
 
+	function appendInlineContent(container, text) {
+		const tokens = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\*\*(.+?)\*\*|__(.+?)__|`([^`]+)`|\*([^*\n]+?)\*/g;
+		let cursor = 0;
+		let match;
+
+		while ((match = tokens.exec(text))) {
+			container.append(document.createTextNode(text.slice(cursor, match.index)));
+			if (match[1]) {
+				let link;
+				try {
+					const url = new URL(match[2]);
+					if (url.protocol === 'https:' && safeSources.has(url.hostname)) {
+						link = document.createElement('a');
+						link.href = url.href;
+						link.target = '_blank';
+						link.rel = 'noopener noreferrer';
+						link.textContent = match[1];
+					}
+				} catch {
+					link = null;
+				}
+				container.append(link || document.createTextNode(match[1]));
+			} else if (match[3] || match[4]) {
+				const strong = document.createElement('strong');
+				strong.textContent = match[3] || match[4];
+				container.append(strong);
+			} else if (match[5]) {
+				const code = document.createElement('code');
+				code.textContent = match[5];
+				container.append(code);
+			} else {
+				const emphasis = document.createElement('em');
+				emphasis.textContent = match[6];
+				container.append(emphasis);
+			}
+			cursor = tokens.lastIndex;
+		}
+
+		container.append(document.createTextNode(text.slice(cursor)));
+	}
+
+	function renderBotMessage(container, text) {
+		const lines = String(text).replace(/\r\n?/g, '\n').split('\n');
+		let paragraph = [];
+		let list = null;
+		let listType = '';
+
+		function flushParagraph() {
+			if (!paragraph.length) return;
+			const element = document.createElement('p');
+			appendInlineContent(element, paragraph.join(' '));
+			container.append(element);
+			paragraph = [];
+		}
+
+		for (const rawLine of lines) {
+			const line = rawLine.trim();
+			if (!line) {
+				flushParagraph();
+				list = null;
+				listType = '';
+				continue;
+			}
+
+			const heading = line.match(/^#{1,3}\s+(.+)$/);
+			if (heading) {
+				flushParagraph();
+				list = null;
+				listType = '';
+				const title = document.createElement('strong');
+				appendInlineContent(title, heading[1]);
+				container.append(title);
+				continue;
+			}
+
+			const orderedItem = line.match(/^\d+[.)]\s+(.+)$/);
+			const unorderedItem = line.match(/^[-*•]\s+(.+)$/);
+			const item = orderedItem || unorderedItem;
+			if (item) {
+				flushParagraph();
+				const nextListType = orderedItem ? 'ol' : 'ul';
+				if (!list || listType !== nextListType) {
+					list = document.createElement(nextListType);
+					listType = nextListType;
+					container.append(list);
+				}
+				const listItem = document.createElement('li');
+				appendInlineContent(listItem, item[1]);
+				list.append(listItem);
+				continue;
+			}
+
+			list = null;
+			listType = '';
+			paragraph.push(line);
+		}
+
+		flushParagraph();
+	}
+
 	function mountAssistant() {
 		if (document.querySelector('.assistant-launcher')) return;
 
@@ -127,7 +227,7 @@
 					<button class="assistant-close" type="button" aria-label="Cerrar ayuda">×</button>
 				</header>
 				<div class="assistant-messages" role="log" aria-live="polite" aria-relevant="additions">
-					<p class="assistant-message assistant-message--bot">Hola. Puedo explicar para qué sirve cada apartado y orientarte sobre dónde capturar la información. ¿Qué necesitas hacer?</p>
+					<div class="assistant-message assistant-message--bot">Hola. Puedo explicar para qué sirve cada apartado y orientarte sobre dónde capturar la información. ¿Qué necesitas hacer?</div>
 				</div>
 				<p class="assistant-status" role="status" aria-live="polite" hidden></p>
 				<div class="assistant-suggestions" aria-label="Preguntas frecuentes">
@@ -180,9 +280,10 @@
 		}
 
 		function addMessage(text, kind, answer = null, sources = []) {
-			const message = document.createElement('p');
+			const message = document.createElement('div');
 			message.className = `assistant-message assistant-message--${kind}`;
-			message.textContent = text;
+			if (kind === 'bot') renderBotMessage(message, text);
+			else message.textContent = text;
 			messageList.append(message);
 
 			if (answer?.tab && document.querySelector(`[data-tab="${answer.tab}"]`)) {
