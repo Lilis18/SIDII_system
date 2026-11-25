@@ -146,12 +146,32 @@ async function generateAssistantAnswer({
     if (response.status === 429) {
       throw createServiceError('Se alcanzó el límite gratuito temporal del asistente. Espera un momento e inténtalo de nuevo.', 429);
     }
+
+    let providerError = null;
     if (!response.ok) {
+      try {
+        providerError = (await response.json())?.error;
+      } catch {
+        providerError = null;
+      }
+      console.error('Gemini API request failed.', {
+        httpStatus: response.status,
+        providerStatus: providerError?.status,
+        providerCode: providerError?.code,
+      });
+    }
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        throw createServiceError('Gemini rechazó la clave o el acceso al proyecto. Revisa GEMINI_API_KEY y los permisos de la API.', 503);
+      }
+      if (response.status === 400 || response.status === 404) {
+        throw createServiceError(`Gemini rechazó la solicitud o el modelo "${model}". Verifica que GEMINI_MODEL esté disponible para generateContent.`, 502);
+      }
       throw createServiceError(
-        response.status === 401 || response.status === 403
-          ? 'El servicio de IA no está disponible. Revisa la configuración de su clave en el servidor.'
-          : 'El servicio de IA no pudo completar la respuesta.',
-        response.status === 401 || response.status === 403 ? 503 : 502,
+        response.status >= 500
+          ? `Gemini presenta un error temporal (HTTP ${response.status}). Inténtalo de nuevo más tarde.`
+          : `Gemini rechazó la solicitud (HTTP ${response.status}). Revisa los registros del backend.`,
+        502,
       );
     }
 

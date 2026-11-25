@@ -48,6 +48,25 @@ test('converts an upstream Gemini quota response to a retryable 429 error', asyn
   );
 });
 
+test('reports model configuration details when Gemini cannot find the model', async () => {
+  const originalError = console.error;
+  console.error = () => {};
+  try {
+    await assert.rejects(
+      generateAssistantAnswer({
+        question: 'Ayuda',
+        apiKey: 'test-secret',
+        fetchImpl: async () => new Response(JSON.stringify({
+          error: { code: 404, status: 'NOT_FOUND' },
+        }), { status: 404, headers: { 'Content-Type': 'application/json' } }),
+      }),
+      (error) => error.status === 502 && /GEMINI_MODEL/.test(error.message),
+    );
+  } finally {
+    console.error = originalError;
+  }
+});
+
 test('does not make a provider request when the key is missing', async () => {
   let wasCalled = false;
   await assert.rejects(
