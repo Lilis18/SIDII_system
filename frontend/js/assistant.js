@@ -1,5 +1,15 @@
 (() => {
 	const apiBase = String(window.SIDII_API_BASE || 'http://localhost:5000/api').replace(/\/+$/, '');
+	const AI_CONSENT_KEY = 'sidii.geminiConsent.v1';
+	const safeSources = new Set([
+		'www.utpuebla.edu.mx',
+		'spfa.puebla.gob.mx',
+		'pbr.puebla.gob.mx',
+		'www.gob.mx',
+		'sabg.puebla.gob.mx',
+		'www.dof.gob.mx',
+		'www.inegi.org.mx',
+	]);
 	const answers = [
 		{
 			match: /contrase|password/,
@@ -70,7 +80,7 @@
 		const headers = { Authorization: `Bearer ${token}`, ...(options.headers || {}) };
 		if (options.body) headers['Content-Type'] = 'application/json';
 		const controller = new AbortController();
-		const timeout = window.setTimeout(() => controller.abort(), 10000);
+		const timeout = window.setTimeout(() => controller.abort(), 20000);
 
 		try {
 			const response = await fetch(`${apiBase}/chat/${endpoint}`, {
@@ -113,11 +123,11 @@
 			</button>
 			<section class="assistant-panel" id="assistantPanel" role="dialog" aria-label="Asistente de ayuda SIDII" hidden>
 				<header class="assistant-header">
-					<div><p>Prototipo</p><h2>Ayuda SIDII</h2></div>
+					<div><p>Ayuda con IA opcional</p><h2>Ayuda SIDII</h2></div>
 					<button class="assistant-close" type="button" aria-label="Cerrar ayuda">×</button>
 				</header>
 				<div class="assistant-messages" role="log" aria-live="polite" aria-relevant="additions">
-					<p class="assistant-message assistant-message--bot">Hola. Puedo guiarte por la página y responder dudas frecuentes. ¿Qué necesitas hacer?</p>
+					<p class="assistant-message assistant-message--bot">Hola. Puedo explicar para qué sirve cada apartado y orientarte sobre dónde capturar la información. ¿Qué necesitas hacer?</p>
 				</div>
 				<p class="assistant-status" role="status" aria-live="polite" hidden></p>
 				<div class="assistant-suggestions" aria-label="Preguntas frecuentes">
@@ -127,9 +137,10 @@
 				</div>
 				<form class="assistant-form">
 					<label class="assistant-sr-only" for="assistantInput">Escribe tu pregunta</label>
-					<input id="assistantInput" name="question" type="text" maxlength="240" placeholder="Escribe tu pregunta" autocomplete="off" required>
+					<input id="assistantInput" name="question" type="text" maxlength="1000" placeholder="Escribe tu pregunta" autocomplete="off" required>
 					<button type="submit" aria-label="Enviar pregunta">Enviar</button>
 				</form>
+				<label class="assistant-privacy"><input id="assistantAiConsent" type="checkbox"> Acepto enviar mi pregunta y los últimos mensajes a Google Gemini (plan gratuito). Google puede usar ese contenido para mejorar sus servicios y revisión; no incluyas información personal, contraseñas ni datos confidenciales. <a href="https://ai.google.dev/gemini-api/docs/terms" target="_blank" rel="noopener noreferrer">Condiciones de Gemini</a>.</label>
 			</section>`;
 		document.body.append(widget);
 
@@ -140,12 +151,19 @@
 		const status = widget.querySelector('.assistant-status');
 		const form = widget.querySelector('.assistant-form');
 		const input = widget.querySelector('#assistantInput');
+		const aiConsent = widget.querySelector('#assistantAiConsent');
 		const suggestionButtons = [...widget.querySelectorAll('[data-question]')];
 		const submitButton = form.querySelector('[type="submit"]');
+		aiConsent.checked = sessionStorage.getItem(AI_CONSENT_KEY) === 'accepted';
+		aiConsent.addEventListener('change', () => {
+			if (aiConsent.checked) sessionStorage.setItem(AI_CONSENT_KEY, 'accepted');
+			else sessionStorage.removeItem(AI_CONSENT_KEY);
+		});
 
 		function setBusy(busy) {
 			input.disabled = busy;
 			submitButton.disabled = busy;
+			aiConsent.disabled = busy;
 			suggestionButtons.forEach((button) => { button.disabled = busy; });
 		}
 
@@ -161,7 +179,7 @@
 			else launcher.focus();
 		}
 
-		function addMessage(text, kind, answer = null) {
+		function addMessage(text, kind, answer = null, sources = []) {
 			const message = document.createElement('p');
 			message.className = `assistant-message assistant-message--${kind}`;
 			message.textContent = text;
@@ -183,6 +201,31 @@
 				action.href = answer.page;
 				action.textContent = answer.page === 'login.html' ? 'Ir al inicio de sesión' : 'Abrir cambio de contraseña';
 				message.append(action);
+			}
+
+			const safeOfficialSources = sources.filter((source) => {
+				try {
+					const url = new URL(source.url);
+					return url.protocol === 'https:' && safeSources.has(url.hostname) && typeof source.name === 'string';
+				} catch {
+					return false;
+				}
+			});
+			if (safeOfficialSources.length) {
+				const sourceList = document.createElement('span');
+				sourceList.className = 'assistant-source-list';
+				const sourceLabel = document.createElement('strong');
+				sourceLabel.textContent = 'Fuentes oficiales sugeridas:';
+				sourceList.append(sourceLabel);
+				safeOfficialSources.forEach((source) => {
+					const link = document.createElement('a');
+					link.href = source.url;
+					link.target = '_blank';
+					link.rel = 'noopener noreferrer';
+					link.textContent = source.name;
+					sourceList.append(link);
+				});
+				message.append(sourceList);
 			}
 
 			messageList.scrollTop = messageList.scrollHeight;
@@ -230,12 +273,37 @@
 			showStatus('');
 			try {
 				addMessage(cleanQuestion, 'user');
-				const userMessageSaved = await persistMessage(cleanQuestion, 'usuario');
-				const answer = getAnswer(cleanQuestion);
-				addMessage(answer.text, 'bot', answer);
+				let answer = getAnswer(cleanQuestion);
+				let sources = [];
+				if (answer.notification) {
+					sources = [{ name: 'Gobierno de México', url: 'https://www.gob.mx/' }];
+				} else if (!aiConsent.checked) {
+					showStatus('Respuesta local. Acepta el aviso de privacidad para consultar a Gemini.');
+				} else if (!localStorage.getItem('token')) {
+					showStatus('Inicia sesión para conversar con Gemini; la ayuda local sigue disponible.');
+				} else if (!navigator.onLine) {
+					showStatus('Sin conexión: se muestra una respuesta local.');
+				} else {
+					try {
+						const result = await chatRequest('ask', {
+							method: 'POST',
+							body: JSON.stringify({ question: cleanQuestion }),
+						});
+						if (typeof result?.answer !== 'string' || !result.answer.trim()) {
+							throw new Error('El asistente de IA devolvió una respuesta vacía.');
+						}
+						answer = { ...answer, text: result.answer.trim() };
+						sources = Array.isArray(result.sources) ? result.sources : [];
+					} catch (error) {
+						console.error('No se pudo consultar Gemini:', error);
+						showStatus(`${error.message || 'Gemini no está disponible.'} Se muestra una respuesta local.`);
+					}
+				}
+				addMessage(answer.text, 'bot', answer, sources);
 				if (answer.notification) {
 					window.mostrarNotificacion?.('SIDII', 'El Chatbot Asistente tiene una sugerencia normativa para ti');
 				}
+				const userMessageSaved = await persistMessage(cleanQuestion, 'usuario');
 				const botMessageSaved = await persistMessage(answer.text, 'bot');
 				if (!userMessageSaved || !botMessageSaved) {
 					showStatus('No se pudo guardar parte de esta conversación. Revisa tu conexión e inténtalo de nuevo.');

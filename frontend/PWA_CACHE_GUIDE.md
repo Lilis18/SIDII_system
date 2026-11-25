@@ -6,7 +6,7 @@ Una PWA usa un service worker, un script que el navegador ejecuta aparte de la p
 
 SIDII separa el contenido estático de los recursos encontrados durante la navegación:
 
-- `sidii-static-v20`: shell y recursos conocidos, precargados durante la instalación.
+- `sidii-static-v21`: shell y recursos conocidos, precargados durante la instalación.
 - `sidii-pages-v1`: páginas HTML visitadas, guardadas para poder recargarlas sin red.
 - `sidii-runtime-v1`: recursos locales que no estaban en la precarga y se descargan durante el uso.
 - `sidii-api-v1-<hash>`: respuestas JSON GET autenticadas, separadas por token de sesión.
@@ -46,7 +46,7 @@ Las altas desde **Cargar datos** que fallen por falta de red se guardan en Index
 
 1. Despliega el frontend actualizado en Render y ábrelo por su URL HTTPS. Evita `file://`; el service worker no funciona desde archivos locales.
 2. Abre DevTools con `F12` y recarga la página. En **Application > Service Workers**, comprueba que `service-worker.js` figura como **activated** y que la página está controlada por él.
-3. En **Application > Cache Storage**, abre `sidii-static-v20`. Deben aparecer `login.html`, `dashboard.html`, `offline.html`, `js/assistant.js`, `css/assistant.css` y otros recursos precargados. `sidii-pages-v1` contendrá las páginas visitadas.
+3. En **Application > Cache Storage**, abre `sidii-static-v21`. Deben aparecer `login.html`, `dashboard.html`, `offline.html`, `js/assistant.js`, `css/assistant.css` y otros recursos precargados. `sidii-pages-v1` contendrá las páginas visitadas.
 4. Comprueba el caché runtime. Entra al panel, abre **Cargar evidencias** y deja que aparezca el membrete `public/Membrete_UTP.jpg`. Ese archivo no está en la precarga; al cargarse como imagen debe aparecer en `sidii-runtime-v1`.
 5. Con sesión iniciada y después de visitar **Visualizador de gráficas**, selecciona **Network > Offline** y recarga `dashboard.html`. Debe mostrarse el dashboard desde `sidii-pages-v1`, restaurar la pestaña de gráficas y pintar los datos desde `sidii-api-v1-...`; las imágenes se sirven desde las cachés estática/runtime. Una página no visitada ni precargada caerá en `offline.html`.
 6. Con sesión iniciada, carga datos para que una respuesta real de `GET /api/data` llegue con `200`. En **Network > Headers > Response Headers** verás `Cache-Control: no-store, private`; en **Application > Cache Storage** debe aparecer una caché `sidii-api-v1-...` con esa ruta. El worker guarda explícitamente la respuesta JSON pese a ese encabezado HTTP.
@@ -58,25 +58,27 @@ Las altas desde **Cargar datos** que fallen por falta de red se guardan en Index
 
 Al servir el frontend localmente con XAMPP, el origen suele ser `http://localhost` o `http://127.0.0.1` (sin el puerto `8081`). El backend debe permitir esos orígenes en CORS; el backend del repositorio ya incluye ambos y los puertos `8081` habituales para desarrollo. Después de desplegar un cambio del backend, reinicia/actualiza el servicio para que la configuración tome efecto.
 
-Si una página desplegada sigue solicitando `127.0.0.1:5000`, probablemente conserva recursos de una versión anterior del service worker. Despliega el nuevo `service-worker.js`, abre **Application > Service Workers**, selecciona **Update** o **Unregister**, limpia **Cache Storage** y recarga. Verifica que `window.SIDII_API_BASE` apunte al backend de Render y que exista `sidii-static-v20`.
+Si una página desplegada sigue solicitando `127.0.0.1:5000`, probablemente conserva recursos de una versión anterior del service worker. Despliega el nuevo `service-worker.js`, abre **Application > Service Workers**, selecciona **Update** o **Unregister**, limpia **Cache Storage** y recarga. Verifica que `window.SIDII_API_BASE` apunte al backend de Render y que exista `sidii-static-v21`.
 
 También puedes inspeccionar los registros desde **Console**:
 
 ```js
 navigator.serviceWorker.controller?.scriptURL
 caches.keys()
-caches.open('sidii-static-v20').then(cache => cache.keys()).then(requests => requests.map(request => new URL(request.url).pathname))
+caches.open('sidii-static-v21').then(cache => cache.keys()).then(requests => requests.map(request => new URL(request.url).pathname))
 caches.open('sidii-runtime-v1').then(cache => cache.keys()).then(requests => requests.map(request => new URL(request.url).pathname))
 caches.keys().then(names => names.filter(name => name.startsWith('sidii-api-v1-')))
 ```
 
 ## Historial del asistente
 
-`backend/models/ChatHistory.js` define cada mensaje con `userId`, `mensaje`, `rol` (`usuario` o `bot`) y `fecha`. `backend/routes/chat.routes.js` ofrece `GET /api/chat/history` y `POST /api/chat/save`; ambas rutas requieren JWT. El servidor deriva `userId` de `req.user.id`, valida los roles y limita el texto a 4000 caracteres. El índice por usuario y fecha permite recuperar los mensajes en orden.
+`backend/models/ChatHistory.js` define cada mensaje con `userId`, `mensaje`, `rol` (`usuario` o `bot`) y `fecha`. `backend/routes/chat.routes.js` ofrece `GET /api/chat/history`, `POST /api/chat/save` y `POST /api/chat/ask`; requieren JWT. El servidor deriva `userId` de `req.user.id`, valida roles y limita el historial enviado al modelo a ocho mensajes.
 
-Al montar el widget, `frontend/js/assistant.js` solicita el historial con el token de la sesión y lo representa como texto escapado por el DOM (`textContent`). Por cada pregunta y respuesta envía una solicitud de guardado. Si no hay sesión, el asistente conserva las respuestas FAQ locales sin intentar consultar ni guardar historial. Si la API no responde, la conversación actual sigue visible y el widget muestra un aviso de que no pudo persistirla.
+Al montar el widget, `frontend/js/assistant.js` solicita el historial con el token de la sesión y lo representa como texto (`textContent`). Con consentimiento explícito, envía la pregunta a Gemini desde el backend; no tener consentimiento, conexión o una clave configurada mantiene las respuestas FAQ locales. El asistente puede abrir la sección SIDII detectada por reglas locales y muestra enlaces oficiales seleccionados por tema. La clave `GEMINI_API_KEY` solo se configura en el backend. Se usa `gemini-3.5-flash-lite` por defecto y se limitan las consultas a tres por minuto y ocho por día por usuario, además de un límite global temporal de 60 al día por instancia.
 
-El historial persistente se almacena en MongoDB; una copia de lecturas autenticadas puede quedar temporalmente en la caché API separada por sesión para consulta offline.
+El historial persistente se almacena en MongoDB. Google indica que los datos enviados bajo la modalidad gratuita pueden ser usados para mejorar sus productos y revisados por personas; no se deben enviar datos personales, confidenciales, contraseñas ni registros institucionales. La integración no activa Google Search grounding porque no está incluido en el nivel gratuito del modelo consultado; los enlaces gubernamentales son referencias oficiales curadas y no resultados verificados en tiempo real. Revisa las [condiciones de Gemini API](https://ai.google.dev/gemini-api/docs/terms) antes de habilitar el proveedor en producción.
+
+Para habilitarlo, crea una clave en [Google AI Studio](https://aistudio.google.com/apikey), configura `GEMINI_API_KEY` en las variables privadas del backend y despliega/reinicia el backend. Nunca la coloques en `frontend/js/api-config.js`. Si no se configura, el asistente conserva las respuestas FAQ locales.
 
 ## Notificaciones
 
@@ -96,12 +98,12 @@ SIDII guarda la interfaz y respuestas exitosas de lectura API autenticadas para 
 
 ## Preauditorías y consulta offline
 
-El Service Worker `sidii-static-v20` precarga `js/auditorias.js` y `css/auditorias.css`. La pantalla de preauditorías guarda una instantánea de los registros pendientes en Cache Storage con el nombre `sidii-preauditorias-v2-<id-de-usuario>`. Las colecciones locales se mantienen separadas por cuenta y el Service Worker conserva estos almacenes durante las actualizaciones. En modo offline la consulta es de solo lectura; el registro de correcciones, el análisis con Groq y la consolidación en MongoDB requieren conexión.
+El Service Worker `sidii-static-v21` precarga `js/auditorias.js` y `css/auditorias.css`. La pantalla de preauditorías guarda una instantánea de los registros pendientes en Cache Storage con el nombre `sidii-preauditorias-v2-<id-de-usuario>`. Las colecciones locales se mantienen separadas por cuenta y el Service Worker conserva estos almacenes durante las actualizaciones. En modo offline la consulta es de solo lectura; el registro de correcciones, el análisis con Groq y la consolidación en MongoDB requieren conexión.
 
 
 ## Alertas push
 
-El Service Worker `sidii-static-v20` precarga `js/alertas.js` y `css/alertas.css`. Además de la caché, el worker recibe las notificaciones push (`push`), ejecuta los botones de acción en segundo plano (`notificationclick`) y guarda en IndexedDB (`sidii-alertas-sw`) las respuestas pulsadas sin conexión para enviarlas con Background Sync o al abrir SIDII. Detalles en `docs/ALERTAS.md`.
+El Service Worker `sidii-static-v21` precarga `js/alertas.js` y `css/alertas.css`. Además de la caché, el worker recibe las notificaciones push (`push`), ejecuta los botones de acción en segundo plano (`notificationclick`) y guarda en IndexedDB (`sidii-alertas-sw`) las respuestas pulsadas sin conexión para enviarlas con Background Sync o al abrir SIDII. Detalles en `docs/ALERTAS.md`.
 
 
 ## Revisión del contenido y de las imágenes de firma
